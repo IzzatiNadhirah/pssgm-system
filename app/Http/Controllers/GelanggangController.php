@@ -2,62 +2,61 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Gelanggang;
+use App\Models\Cawangan;
+use App\Models\Instructor;
 use Illuminate\Http\Request;
 
 class GelanggangController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $cawangans = Cawangan::all(); 
+        $instructors = Instructor::all(); 
+        
+        return view('gelanggang.create', compact('cawangans', 'instructors'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'caw_ID' => 'required',
+            'instructor_ID' => 'required',
+        ]);
+
+        Gelanggang::create([
+            'gel_name' => $request->name,
+            'gel_address' => $request->address,
+            'caw_ID' => $request->caw_ID,
+            'instructor_ID' => $request->instructor_ID,
+        ]);
+
+        return redirect()->route('gelanggangs.create')->with('success', 'Gelanggang registered successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Gelanggang $gelanggang)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Gelanggang $gelanggang)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Gelanggang $gelanggang)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Gelanggang $gelanggang)
     {
         //
     }

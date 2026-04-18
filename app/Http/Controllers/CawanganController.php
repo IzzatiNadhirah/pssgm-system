@@ -2,62 +2,61 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cawangan;
+use App\Models\Staff;
 use Illuminate\Http\Request;
 
 class CawanganController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        // Fetch all staff members to populate the dropdown
+        $staffs = Staff::all(); 
+        
+        return view('cawangan.create', compact('staffs'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        // 1. Validate the incoming form data
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'staff_ID' => 'required',
+        ]);
+
+        // 2. Map form data to actual database columns
+        Cawangan::create([
+            'caw_name' => $request->name,
+            'caw_address' => $request->address,
+            'staff_ID' => $request->staff_ID,
+        ]);
+
+        // 3. Redirect back to the form with a success message
+        return redirect()->route('cawangans.create')->with('success', 'Cawangan registered successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Cawangan $cawangan)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Cawangan $cawangan)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Cawangan $cawangan)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Cawangan $cawangan)
     {
         //
     }
