@@ -2,63 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
+use App\Models\Instructor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        // Fetch all instructors to populate the dropdown
+        $instructors = Instructor::all(); 
+        
+        return view('course.create', compact('instructors'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        // 1. Validate the incoming form data
+        $request->validate([
+            'course_name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'instructor_ID' => 'required',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // 2. Create the new course
+        Course::create([
+            'course_code' => 'CRS-' . strtoupper(Str::random(5)), // Auto-generate code
+            'course_name' => $request->course_name,
+            'description' => $request->description,
+            'instructor_ID' => $request->instructor_ID,
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        // 3. Redirect back with a success message
+        return redirect()->route('courses.create')->with('success', 'Course registered successfully!');
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    
+    // ... leave other standard resource methods empty for now
 }

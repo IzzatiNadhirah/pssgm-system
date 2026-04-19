@@ -9,12 +9,23 @@ class Course extends Model
 {
     use HasFactory;
 
-    protected $table = 'course';
-    protected $primaryKey = 'course_ID';
+    protected $table = 'courses';
+    
+    // Assuming you follow your standard naming convention
+    protected $primaryKey = 'course_ID'; 
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'course_code',
-        'course_type',
-        'instructor_ID',
+        'course_name',
+        'description',
+        'instructor_ID', // Links this course to an instructor
     ];
+
+    // Relationship: A course belongs to an Instructor
+    public function instructor()
+    {
+        return $this->belongsTo(Instructor::class, 'instructor_ID', 'instructor_ID');
+    }
 }
