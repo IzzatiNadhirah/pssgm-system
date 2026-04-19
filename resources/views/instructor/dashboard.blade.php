@@ -14,13 +14,13 @@
             <p style="color: green;"><b>{{ session('success') }}</b></p>
         @endif
 
-        <p>Welcome to the Instructor panel.</p>
+        <p>Welcome to the Instructor panel, <b>{{ Auth::guard('instructor')->user()->name }}</b>!</p>
 
-        <div style="margin: 20px 0;">
+        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #17a2b8;">
             <h3>Quick Actions</h3>
             <ul>
-                <li><a href="{{ route('sessions.create') }}">Manage Training Sessions</a></li>
-                <li><a href="{{ route('courses.create') }}">Manage Courses</a></li>
+                <li><a href="#">Manage Courses</a></li>
+                <li><a href="#">Manage Training Sessions</a></li>
             </ul>
         </div>
 

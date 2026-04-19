@@ -15,7 +15,7 @@ class CawanganController extends Controller
 
     public function create()
     {
-        // Fetch all staff members to populate the dropdown
+        // Fetch all staff members to populate the dropdown for the Super Admin
         $staffs = Staff::all(); 
         
         return view('cawangan.create', compact('staffs'));
@@ -34,7 +34,7 @@ class CawanganController extends Controller
         Cawangan::create([
             'caw_name' => $request->name,
             'caw_address' => $request->address,
-            'staff_ID' => $request->staff_ID,
+            'staff_ID' => $request->staff_ID, // Assigned from the dropdown
         ]);
 
         // 3. Redirect back to the form with a success message

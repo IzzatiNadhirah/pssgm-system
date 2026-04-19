@@ -14,14 +14,15 @@
             <p style="color: green;"><b>{{ session('success') }}</b></p>
         @endif
 
-        <p>Welcome to the Staff control panel.</p>
+        <p>Welcome to the Admin Staff panel, <b>{{ Auth::guard('staff')->user()->name }}</b>!</p>
 
-        <div style="margin: 20px 0;">
-            <h3>Quick Actions</h3>
+        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
+            <h3>System Management</h3>
             <ul>
-                <li><a href="{{ route('cawangans.create') }}">Register New Cawangan</a></li>
-                <li><a href="{{ route('gelanggangs.create') }}">Register New Gelanggang</a></li>
-                <li><a href="{{ route('users.index') }}">View All Members</a></li>
+                <li><a href="#">Manage Cawangan (Branches)</a></li>
+                <li><a href="#">Manage Gelanggang</a></li>
+                <li><a href="#">Manage System Users</a></li>
+                <li><a href="#">View Payments & Memberships</a></li>
             </ul>
         </div>
 

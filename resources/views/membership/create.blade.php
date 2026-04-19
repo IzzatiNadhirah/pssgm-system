@@ -6,60 +6,56 @@
     <title>Membership & Payment</title>
 </head>
 <body>
-    <h2>Membership Registration & Payment</h2>
+    <div style="max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <h2>Membership Registration & Payment</h2>
 
-    @if (session('success'))
-        <script>alert("{{ session('success') }}");</script>
-        <p style="color: green;"><b>{{ session('success') }}</b></p>
-    @endif
+        @if (session('success'))
+            <script>alert("{{ session('success') }}");</script>
+            <p style="color: green;"><b>{{ session('success') }}</b></p>
+        @endif
 
-    @if ($errors->any())
-        <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
-            <b>Validation Errors:</b>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+        @if ($errors->any())
+            <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+                <b>Validation Errors:</b>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-    <form action="{{ route('memberships.store') }}" method="POST">
-        @csrf 
+        <form action="{{ route('memberships.store') }}" method="POST">
+            @csrf 
 
-        <h3>Section 1: Membership Details</h3>
-        <label for="user_ID">Select User:</label><br>
-        <select id="user_ID" name="user_ID" required>
-            <option value="" disabled selected>-- Select User --</option>
-            @foreach($users as $user)
-                <option value="{{ $user->id ?? $user->user_ID }}">{{ $user->name }} ({{ $user->icNo }})</option>
-            @endforeach
-        </select><br><br>
+            <h3>Section 1: Membership Details</h3>
+            
+            <p><b>Registering as:</b> {{ Auth::user()->name }} ({{ Auth::user()->icNo }})</p><br>
 
-        <label for="member_type">Membership Type:</label><br>
-        <select id="member_type" name="member_type" required>
-            <option value="" disabled selected>-- Select Type --</option>
-            <option value="Tahunan">Tahunan (Annual)</option>
-            <option value="Sepanjang Hayat">Sepanjang Hayat (Life)</option>
-        </select><br><br>
+            <label for="member_type">Membership Type:</label><br>
+            <select id="member_type" name="member_type" required style="width: 100%; padding: 8px; margin-top: 5px;">
+                <option value="" disabled selected>-- Select Type --</option>
+                <option value="Tahunan">Ahli Tahunan (RM 20.00)</option>
+                <option value="Sepanjang Hayat">Ahli Sepanjang Hayat (RM 200.00)</option>
+            </select><br><br>
 
-        <hr>
+            <hr>
 
-        <h3>Section 2: Payment Information</h3>
-        <label for="amount">Total Amount (RM):</label><br>
-        <input type="number" step="0.01" id="amount" name="amount" placeholder="50.00" required><br><br>
+            <h3>Section 2: Payment Information</h3>
+            <p style="font-size: 0.9em; color: #555;"><i>* The system will automatically calculate your total and record today's date.</i></p>
 
-        <label for="payment_method">Payment Method:</label><br>
-        <select id="payment_method" name="payment_method" required>
-            <option value="Cash">Cash</option>
-            <option value="Online Transfer">Online Transfer</option>
-            <option value="Card">Credit/Debit Card</option>
-        </select><br><br>
+            <label for="payment_method">Payment Method:</label><br>
+            <select id="payment_method" name="payment_method" required style="width: 100%; padding: 8px; margin-top: 5px;">
+                <option value="" disabled selected>-- Select Payment Method --</option>
+                <option value="ToyyibPay">Online Banking (ToyyibPay)</option>
+                <option value="Cash">Cash to Instructor</option>
+                <option value="Manual Transfer">Manual Bank Transfer</option>
+            </select><br><br>
 
-        <label for="payment_date">Date of Payment:</label><br>
-        <input type="date" id="payment_date" name="payment_date" value="{{ date('Y-m-d') }}" required><br><br>
-
-        <button type="submit" style="padding: 10px 20px; cursor: pointer;">Complete Registration & Pay</button>
-    </form>
+            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                Complete Registration & Pay
+            </button>
+        </form>
+    </div>
 </body>
 </html>

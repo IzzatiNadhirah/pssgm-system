@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;           // Added for Logout
+use Illuminate\Support\Facades\Auth;   // Added for Logout
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\InstructorController;
@@ -32,25 +34,23 @@ Route::resource('instructors', InstructorController::class)->only(['create', 'st
 // ==========================================
 // 2. SECURE ROUTES (Must be logged in)
 // ==========================================
-Route::middleware(['auth'])->group(function () {
 
-    // Logout Route
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// --- SHARED SECURE ROUTES (Accessible by ANY logged-in role) ---
+Route::middleware(['auth:web,staff,instructor'])->group(function () {
+    
+    // Ghost-Busting Logout Route
+    Route::post('/logout', function (Request $request) {
+        Auth::guard('web')->logout();
+        Auth::guard('staff')->logout();
+        Auth::guard('instructor')->logout();
 
-    // Dashboards - Now pointing to Blade views
-    Route::get('/dashboard', function () { 
-        return view('dashboard'); 
-    })->name('dashboard');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    Route::get('/staff/dashboard', function () { 
-        return view('staff.dashboard'); 
-    })->name('staff.dashboard');
+        return redirect('/login');
+    })->name('logout');
 
-    Route::get('/instructor/dashboard', function () { 
-        return view('instructor.dashboard'); 
-    })->name('instructor.dashboard');
-
-    // Management Routes (Cawangan, Gelanggang, Memberships, etc.)
+    // Management Routes (You can secure these further later if needed)
     Route::resource('cawangans', CawanganController::class);
     Route::resource('gelanggangs', GelanggangController::class);
     Route::resource('courses', CourseController::class);
@@ -58,9 +58,29 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('payments', PaymentController::class);
     Route::resource('sessions', SessionTimetableController::class);
 
-    // Protected actions for Users, Staff, Instructors (Viewing, Editing, Deleting)
+    // Protected actions
     Route::resource('users', UserController::class)->except(['create', 'store']);
     Route::resource('staffs', StaffController::class)->except(['create', 'store']);
     Route::resource('instructors', InstructorController::class)->except(['create', 'store']);
+});
 
+// --- USER ONLY ROUTES ---
+Route::middleware(['auth:web'])->group(function () {
+    Route::get('/dashboard', function () { 
+        return view('dashboard'); 
+    })->name('dashboard');
+});
+
+// --- STAFF ONLY ROUTES ---
+Route::middleware(['auth:staff'])->group(function () {
+    Route::get('/staff/dashboard', function () { 
+        return view('staff.dashboard'); 
+    })->name('staff.dashboard');
+});
+
+// --- INSTRUCTOR ONLY ROUTES ---
+Route::middleware(['auth:instructor'])->group(function () {
+    Route::get('/instructor/dashboard', function () { 
+        return view('instructor.dashboard'); 
+    })->name('instructor.dashboard');
 });

@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Staff extends Model
+class Staff extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     // 1. Define the exact table name
     protected $table = 'staff';
@@ -21,5 +22,6 @@ class Staff extends Model
         'name',
         'email',
         'password',
+        'role', // ADD THIS LINE: 'super_admin' or 'admin'
     ];
 }

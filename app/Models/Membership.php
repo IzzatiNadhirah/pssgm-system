@@ -27,8 +27,8 @@ class Membership extends Model
      */
     public function user()
     {
-        // This links user_ID in membership table to id in users table
-        return $this->belongsTo(User::class, 'user_ID', 'id');
+        // This links user_ID in membership table to user_ID in users table
+        return $this->belongsTo(User::class, 'user_ID', 'user_ID');
     }
 
     /**

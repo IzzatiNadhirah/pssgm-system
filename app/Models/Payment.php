@@ -12,12 +12,16 @@ class Payment extends Model
     protected $table = 'payment';
     protected $primaryKey = 'payment_ID';
 
+    // Tell Laravel this custom ID is an auto-incrementing number
+    public $incrementing = true;
+    protected $keyType = 'int';
+
     protected $fillable = [
         'payment_code',
         'amount',
         'payment_date',
         'payment_status',
-        'receipt_path',
+        'receipt_path', // Ready for your future QR scan/upload!
         'member_ID',
     ];
 }
