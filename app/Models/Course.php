@@ -9,23 +9,24 @@ class Course extends Model
 {
     use HasFactory;
 
-    protected $table = 'courses';
-    
-    // Assuming you follow your standard naming convention
-    protected $primaryKey = 'course_ID'; 
-    public $incrementing = true;
-    protected $keyType = 'int';
+    // 1. Tell Laravel the exact name of your PostgreSQL table
+    protected $table = 'course';
 
+    // 2. Tell Laravel your custom primary key
+    protected $primaryKey = 'course_ID';
+
+    // 3. Allow mass assignment for these fields
     protected $fillable = [
         'course_code',
         'course_name',
         'description',
-        'instructor_ID', // Links this course to an instructor
+        'instructor_ID',
     ];
 
-    // Relationship: A course belongs to an Instructor
+    // 4. Connect the Course to the Instructor
     public function instructor()
     {
+        // Adjust 'instructor_ID' if your foreign key is named differently
         return $this->belongsTo(Instructor::class, 'instructor_ID', 'instructor_ID');
     }
 }

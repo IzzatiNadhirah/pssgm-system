@@ -18,5 +18,20 @@ class Gelanggang extends Model
         'gel_address',
         'caw_ID',
         'instructor_ID',
+        'status', // NEW LINE ADDED
     ];
+
+    // Add these methods below your $fillable array
+
+    public function cawangan()
+    {
+        // Links the caw_ID in this table to the caw_ID in the Cawangan table
+        return $this->belongsTo(Cawangan::class, 'caw_ID', 'caw_ID');
+    }
+
+    public function instructor()
+    {
+        // Links the instructor_ID in this table to the instructor_ID in the Instructor table
+        return $this->belongsTo(Instructor::class, 'instructor_ID', 'instructor_ID');
+    }
 }

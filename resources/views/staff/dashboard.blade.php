@@ -19,10 +19,12 @@
         <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
             <h3>System Management</h3>
             <ul>
-                <li><a href="#">Manage Cawangan (Branches)</a></li>
-                <li><a href="#">Manage Gelanggang</a></li>
-                <li><a href="#">Manage System Users</a></li>
-                <li><a href="#">View Payments & Memberships</a></li>
+                <li><a href="#" style="color: gray; text-decoration: none;">View My Cawangan (Page Not Built Yet)</a></li>
+                
+                <li><a href="{{ route('gelanggangs.create') }}" style="font-weight: bold;">Register New Gelanggang</a></li>
+                
+                <li><a href="#" style="color: gray; text-decoration: none;">Manage System Users (Page Not Built Yet)</a></li>
+                <li><a href="#" style="color: gray; text-decoration: none;">View Payments & Memberships (Page Not Built Yet)</a></li>
             </ul>
         </div>
 

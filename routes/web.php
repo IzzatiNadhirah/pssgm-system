@@ -50,7 +50,7 @@ Route::middleware(['auth:web,staff,instructor'])->group(function () {
         return redirect('/login');
     })->name('logout');
 
-    // Management Routes (You can secure these further later if needed)
+    // Management Routes
     Route::resource('cawangans', CawanganController::class);
     Route::resource('gelanggangs', GelanggangController::class);
     Route::resource('courses', CourseController::class);
@@ -67,13 +67,35 @@ Route::middleware(['auth:web,staff,instructor'])->group(function () {
 // --- USER ONLY ROUTES ---
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/dashboard', function () { 
-        return view('dashboard'); 
+        return view('user.dashboard'); 
     })->name('dashboard');
 });
 
 // --- STAFF ONLY ROUTES ---
 Route::middleware(['auth:staff'])->group(function () {
+    
+    // Pending Gelanggang Routes for Super Admin
+    // (Must be defined above the dashboard to keep routes organized)
+    Route::get('/gelanggangs-pending', [GelanggangController::class, 'pending'])->name('gelanggangs.pending');
+    Route::post('/gelanggangs/{id}/approve', [GelanggangController::class, 'approve'])->name('gelanggangs.approve');
+    Route::post('/gelanggangs/{id}/reject', [GelanggangController::class, 'reject'])->name('gelanggangs.reject');
+
     Route::get('/staff/dashboard', function () { 
+        $staff = Auth::guard('staff')->user();
+
+        // 1. If it is the Super Admin, fetch the stats and load the Admin view
+        if ($staff->role === 'super_admin') {
+            $totalMembers = \App\Models\User::count();
+            
+            // UPDATED: Only count active/approved Gelanggangs
+            $totalGelanggang = \App\Models\Gelanggang::where('status', 'approved')->count(); 
+            
+            $totalFees = \App\Models\Payment::sum('amount'); 
+
+            return view('staff.admin_dashboard', compact('totalMembers', 'totalGelanggang', 'totalFees'));
+        }
+
+        // 2. If it is regular staff, load the standard view
         return view('staff.dashboard'); 
     })->name('staff.dashboard');
 });

@@ -10,7 +10,9 @@ class CawanganController extends Controller
 {
     public function index()
     {
-        //
+        // Fetch all branches
+        $cawangans = Cawangan::all();
+        return view('cawangan.index', compact('cawangans'));
     }
 
     public function create()
@@ -34,11 +36,11 @@ class CawanganController extends Controller
         Cawangan::create([
             'caw_name' => $request->name,
             'caw_address' => $request->address,
-            'staff_ID' => $request->staff_ID, // Assigned from the dropdown
+            'staff_ID' => $request->staff_ID, 
         ]);
 
-        // 3. Redirect back to the form with a success message
-        return redirect()->route('cawangans.create')->with('success', 'Cawangan registered successfully!');
+        // 3. Redirect to the index page with a success message
+        return redirect()->route('cawangans.index')->with('success', 'Cawangan registered successfully!');
     }
 
     public function show(Cawangan $cawangan)
@@ -46,18 +48,41 @@ class CawanganController extends Controller
         //
     }
 
-    public function edit(Cawangan $cawangan)
+    // UPDATED: Fetch the specific record and load the edit view
+    public function edit($id)
     {
-        //
+        $cawangan = Cawangan::findOrFail($id);
+        $staffs = Staff::all(); 
+        
+        return view('cawangan.edit', compact('cawangan', 'staffs'));
     }
 
-    public function update(Request $request, Cawangan $cawangan)
+    // UPDATED: Process the edited form data and save to database
+    public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'staff_ID' => 'required',
+        ]);
+
+        $cawangan = Cawangan::findOrFail($id);
+        
+        $cawangan->update([
+            'caw_name' => $request->name,
+            'caw_address' => $request->address,
+            'staff_ID' => $request->staff_ID,
+        ]);
+
+        return redirect()->route('cawangans.index')->with('success', 'Cawangan updated successfully!');
     }
 
-    public function destroy(Cawangan $cawangan)
+    public function destroy($id)
     {
-        //
+        // Find the specific branch by its custom primary key and delete it
+        $cawangan = Cawangan::findOrFail($id);
+        $cawangan->delete();
+
+        return redirect()->route('cawangans.index')->with('success', 'Cawangan deleted successfully!');
     }
 }

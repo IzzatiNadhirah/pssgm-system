@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Membership; // Added this import
+use App\Models\Membership; 
 
 class User extends Authenticatable
 {
@@ -56,11 +56,11 @@ class User extends Authenticatable
     }
 
     // ==========================================
-    // ADDED: The Memberships Relationship
+    // UPDATED: Singular relationship for the Dashboard
     // ==========================================
-    public function memberships()
+    public function membership()
     {
-        // Links the user_ID in this model to the user_ID in the Membership model
-        return $this->hasMany(Membership::class, 'user_ID', 'user_ID');
+        // Links the user_ID, and specifically grabs the most recently created record
+        return $this->hasOne(Membership::class, 'user_ID', 'user_ID')->latest();
     }
 }

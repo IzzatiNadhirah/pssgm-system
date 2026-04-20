@@ -16,7 +16,7 @@
 
         <hr>
 
-        @if(Auth::user()->memberships->isEmpty())
+        @if(is_null(Auth::user()->membership))
             <div style="background-color: #fff3cd; padding: 15px; border-left: 5px solid #ffc107; margin-bottom: 20px;">
                 <h3>Step 1: Membership Registration</h3>
                 <p>You must complete your membership payment before you can enroll in courses or training sessions.</p>
