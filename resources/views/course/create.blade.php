@@ -28,25 +28,24 @@
         <form action="{{ route('courses.store') }}" method="POST">
             @csrf 
 
-            <label for="course_name">Course Name:</label><br>
-            <input type="text" id="course_name" name="course_name" placeholder="e.g., Asas Silat (Level 1)" required style="width: 100%;"><br><br>
-
-            <label for="description">Course Description:</label><br>
-            <textarea id="description" name="description" rows="4" required style="width: 100%;"></textarea><br><br>
-
-            <label for="instructor_ID">Assign Instructor:</label><br>
-            <select id="instructor_ID" name="instructor_ID" required style="width: 100%; padding: 5px;">
-                <option value="" disabled selected>-- Select Instructor --</option>
-                @foreach($instructors as $instructor)
-                    <option value="{{ $instructor->instructor_ID ?? $instructor->id }}">
-                        {{ $instructor->name }}
-                    </option>
-                @endforeach
+            <label for="course_type">Course Type:</label><br>
+            <select id="course_type" name="course_type" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+                <option value="" disabled selected>-- Select Course Type --</option>
+                <option value="Silat Olahraga">Silat Olahraga</option>
+                <option value="Silat Seni">Silat Seni</option>
+                <option value="Pelajaran Silibus">Pelajaran Silibus</option>
             </select><br><br>
 
-            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <label>Assigned Instructor:</label><br>
+            <input type="text" value="{{ Auth::guard('instructor')->user()->name ?? Auth::user()->name }}" disabled style="width: 100%; padding: 8px; background-color: #e9ecef; border: 1px solid #ccc; border-radius: 4px; color: #495057; box-sizing: border-box;">
+            
+            <input type="hidden" name="instructor_ID" value="{{ Auth::guard('instructor')->user()->instructor_ID ?? Auth::user()->instructor_ID ?? Auth::id() }}">
+            <br><br>
+
+            <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
                 Register Course
             </button>
+            <a href="{{ route('courses.index') }}" style="margin-left: 15px; color: #007bff; text-decoration: none;">Cancel</a>
         </form>
     </div>
 </body>

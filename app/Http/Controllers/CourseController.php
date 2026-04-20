@@ -28,19 +28,16 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'course_name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'course_type' => 'required|string|max:255',
             'instructor_ID' => 'required',
         ]);
 
         Course::create([
             'course_code' => 'CRS-' . strtoupper(Str::random(5)), 
-            'course_name' => $request->course_name,
-            'description' => $request->description,
+            'course_type' => $request->course_type,
             'instructor_ID' => $request->instructor_ID,
         ]);
 
-        // Redirect back to the master list instead of the creation form
         return redirect()->route('courses.index')->with('success', 'Course registered successfully!');
     }
 
@@ -60,16 +57,14 @@ class CourseController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'course_name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'course_type' => 'required|string|max:255',
             'instructor_ID' => 'required',
         ]);
 
         $course = Course::findOrFail($id);
         
         $course->update([
-            'course_name' => $request->course_name,
-            'description' => $request->description,
+            'course_type' => $request->course_type,
             'instructor_ID' => $request->instructor_ID,
         ]);
 

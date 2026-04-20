@@ -18,8 +18,7 @@ class Course extends Model
     // 3. Allow mass assignment for these fields
     protected $fillable = [
         'course_code',
-        'course_name',
-        'description',
+        'course_type', // Replaced course_name and description
         'instructor_ID',
     ];
 

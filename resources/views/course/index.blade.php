@@ -45,8 +45,7 @@
                     <thead>
                         <tr>
                             <th>Course Code</th>
-                            <th>Course Name</th>
-                            <th>Description</th>
+                            <th>Course Type</th>
                             <th>Instructor Assigned</th>
                             <th style="text-align: center;">Actions</th>
                         </tr>
@@ -55,9 +54,7 @@
                         @foreach($courses as $course)
                         <tr>
                             <td><b>{{ $course->course_code }}</b></td> 
-                            <td>{{ $course->course_name }}</td>
-                            <td>{{ Str::limit($course->description, 50) }}</td>
-                            
+                            <td>{{ $course->course_type }}</td>
                             <td>{{ $course->instructor->name ?? $course->instructor_ID }}</td>
                             
                             <td style="display: flex; gap: 10px; justify-content: center;">
