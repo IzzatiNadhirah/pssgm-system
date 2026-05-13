@@ -6,13 +6,21 @@ use App\Models\Course;
 use App\Models\Instructor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth; // Wajib tambah ni untuk guna fungsi login check
 
 class CourseController extends Controller
 {
     public function index()
     {
-        // Fetch all courses. Assuming you have an 'instructor' relationship in your Course model.
-        $courses = Course::with('instructor')->get();
+        // Jika yang login adalah Instructor, tunjuk kursus dia sahaja
+        if (Auth::guard('instructor')->check()) {
+            $instructorId = Auth::guard('instructor')->user()->instructor_ID;
+            $courses = Course::with('instructor')->where('instructor_ID', $instructorId)->get();
+        } 
+        // Jika Staff (Admin) yang login, tunjuk semua kursus
+        else {
+            $courses = Course::with('instructor')->get();
+        }
         
         return view('course.index', compact('courses'));
     }
@@ -77,5 +85,45 @@ class CourseController extends Controller
         $course->delete();
 
         return redirect()->route('courses.index')->with('success', 'Course deleted successfully!');
+    }
+
+    // Memaparkan borang set jadual
+    public function editSchedule($id)
+    {
+        $course = Course::findOrFail($id);
+        
+        if (Auth::guard('instructor')->check() && $course->instructor_ID != Auth::guard('instructor')->user()->instructor_ID) {
+            abort(403, 'Anda tiada kebenaran untuk ubah jadual kursus ini.');
+        }
+
+        // Cari SEMUA gelanggang yang Instructor ni ajar
+        $gelanggangs = \App\Models\Gelanggang::where('instructor_ID', $course->instructor_ID)->get();
+
+        return view('course.schedule', compact('course', 'gelanggangs'));
+    }
+
+    public function updateSchedule(Request $request, $id)
+    {
+        $request->validate([
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'gel_ID' => 'required',
+            'capacity' => 'required|integer|min:1',
+        ]);
+
+        $course = Course::findOrFail($id);
+        
+        // Formatkan masa menggunakan fungsi bawaan Laravel (Carbon)
+        $start = \Carbon\Carbon::parse($request->start_time)->format('d M Y, h:i A');
+        $end = \Carbon\Carbon::parse($request->end_time)->format('h:i A');
+        $gabungan_masa = $start . ' - ' . $end;
+
+        $course->update([
+            'session_time' => $gabungan_masa,
+            'capacity' => $request->capacity,
+            'gel_ID' => $request->gel_ID,
+        ]);
+
+        return redirect()->route('courses.index')->with('success', 'Class schedule updated successfully!');
     }
 }

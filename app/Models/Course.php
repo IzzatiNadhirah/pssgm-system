@@ -18,8 +18,11 @@ class Course extends Model
     // 3. Allow mass assignment for these fields
     protected $fillable = [
         'course_code',
-        'course_type', // Replaced course_name and description
+        'course_type',
         'instructor_ID',
+        'session_time',
+        'capacity',
+        'gel_ID', // <--- Tambah ni
     ];
 
     // 4. Connect the Course to the Instructor
@@ -27,5 +30,10 @@ class Course extends Model
     {
         // Adjust 'instructor_ID' if your foreign key is named differently
         return $this->belongsTo(Instructor::class, 'instructor_ID', 'instructor_ID');
+    }
+
+    public function gelanggang()
+    {
+        return $this->belongsTo(Gelanggang::class, 'gel_ID', 'gel_ID');
     }
 }

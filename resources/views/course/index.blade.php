@@ -3,80 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Courses</title>
+    <title>Course Directory - PSSGM Melaka</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #f8f9fa; font-weight: bold; color: #333; }
-        tr:hover { background-color: #f1f1f1; }
+        /* CSS Khusus untuk Page Content sahaja (Navbar CSS dah ada dalam include) */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #111; 
+            margin: 0; 
+            min-height: 100vh;
+        }
+
+        .content-area {
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { 
+            max-width: 1200px; 
+            width: 100%;
+            background: white; 
+            padding: 35px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            border-top: 8px solid #cc0000;
+            border-bottom: 8px solid #ffcc00;
+        }
         
-        .btn { padding: 6px 12px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; text-decoration: none; display: inline-block; font-size: 0.9em; }
-        .btn-add { background-color: #28a745; color: white; margin-bottom: 15px; }
-        .btn-edit { background-color: #ffc107; color: #212529; }
-        .btn-delete { background-color: #dc3545; color: white; }
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
         
-        .empty-state { background-color: #e9ecef; padding: 40px; text-align: center; border-radius: 8px; color: #6c757d; margin-top: 20px; }
-        .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-left: 5px solid #28a745; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        
+        th { 
+            background-color: #111; 
+            color: #ffcc00; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+        
+        tr:hover { background-color: #fffdf5; }
+        
+        .btn { 
+            padding: 8px 16px; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            text-decoration: none; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 5px;
+            font-size: 0.85em; 
+            transition: 0.2s;
+        }
+        
+        .btn-add { background-color: #cc0000; color: white; }
+        .btn-edit { background-color: #ffcc00; color: #111; }
+        .btn-delete { background-color: #333; color: white; }
+        .btn-schedule { background-color: #17a2b8; color: white; }
+        .btn-join { background-color: #28a745; color: white; }
+        .btn-disabled { background-color: #6c757d; color: white; cursor: not-allowed; opacity: 0.8; }
+
+        .btn:hover:not(.btn-disabled) { opacity: 0.9; transform: translateY(-2px); }
+
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .alert-success { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
+        .alert-error { background: #f8d7da; color: #721c24; border-left: 5px solid #dc3545; }
+
+        .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .back-link:hover { transform: translateX(-5px); }
     </style>
 </head>
 <body>
-    <div class="container">
-        
-        <h2 style="margin-top: 0;">Course Directory</h2>
-        <p style="color: #666;">Manage all martial arts training courses available in the system.</p>
 
-        @if (session('success'))
-            <div class="alert-success">
-                <b>{{ session('success') }}</b>
+    @include('layouts.navbar')
+
+    <div class="content-area">
+        <div class="container">
+            
+            <div class="header-area">
+                <h2>Course Directory & Schedules</h2>
+                @if(Auth::guard('staff')->check())
+                    <a href="{{ route('courses.create') }}" class="btn btn-add">
+                        <span class="material-icons">add</span> Register New Course
+                    </a>
+                @endif
             </div>
-        @endif
 
-        <a href="{{ route('courses.create') }}" class="btn btn-add">+ Register New Course</a>
+            @if (session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-error">{{ session('error') }}</div>
+            @endif
 
-        @if($courses->isEmpty())
-            <div class="empty-state">
-                <p style="margin-top: 0;">No courses have been registered yet.</p>
+            @if($courses->isEmpty())
+                <div style="text-align: center; padding: 50px; color: #888;">
+                    <span class="material-icons" style="font-size: 48px;">inventory_2</span>
+                    <p>No courses found in the system.</p>
+                </div>
+            @else
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Type</th>
+                                <th>Instructor</th>
+                                <th>Location</th>
+                                <th>Schedule</th>
+                                <th>Capacity</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($courses as $course)
+                            <tr>
+                                <td><b>{{ $course->course_code }}</b></td> 
+                                <td>{{ $course->course_type }}</td>
+                                <td>{{ $course->instructor->name ?? 'Unassigned' }}</td>
+                                <td>{{ $course->gelanggang->gel_name ?? 'Not Set' }}</td>
+                                <td style="color: {{ $course->session_time ? '#111' : '#cc0000' }};">
+                                    <b>{{ $course->session_time ?? 'Not Scheduled' }}</b>
+                                </td>
+                                <td>{{ $course->capacity ?? '-' }} Pax</td>
+                                
+                                <td style="display: flex; gap: 8px; justify-content: center;">
+                                    {{-- STAFF ACTIONS --}}
+                                    @if(Auth::guard('staff')->check())
+                                        <a href="{{ route('courses.edit', $course->course_ID) }}" class="btn btn-edit" title="Edit">
+                                            <span class="material-icons">edit</span>
+                                        </a>
+                                        <form action="{{ route('courses.destroy', $course->course_ID) }}" method="POST" onsubmit="return confirm('Delete course?');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-delete"><span class="material-icons">delete</span></button>
+                                        </form>
+                                    @endif
+
+                                    {{-- INSTRUCTOR ACTIONS --}}
+                                    @if(Auth::guard('instructor')->check() && Auth::guard('instructor')->user()->instructor_ID == $course->instructor_ID)
+                                        <a href="{{ route('courses.schedule', $course->course_ID) }}" class="btn btn-schedule">
+                                            <span class="material-icons">event</span> Set Schedule
+                                        </a>
+                                    @endif
+
+                                    {{-- MEMBER ACTIONS (JOIN TRAINING) --}}
+                                    @if(!Auth::guard('staff')->check() && !Auth::guard('instructor')->check())
+                                        
+                                        {{-- LOGIK BARU: Cek kalau maklumat kursus lengkap --}}
+                                        @if($course->instructor_ID && $course->gelanggang_ID && $course->session_time)
+                                            <form action="{{ route('enroll.store', $course->course_ID) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-join">
+                                                    <span class="material-icons">add_circle</span> Join Training
+                                                </button>
+                                            </form>
+                                        @else
+                                            {{-- Butang kelabu kalau tak lengkap (Berdasarkan perbincangan tadi) --}}
+                                            <button type="button" class="btn btn-disabled" title="Class not ready for enrollment">
+                                                <span class="material-icons">lock</span> Not Ready
+                                            </button>
+                                        @endif
+
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            <div class="footer-nav">
+                @if(Auth::guard('staff')->check())
+                    <a href="{{ route('staff.dashboard') }}" class="back-link">
+                        <span class="material-icons">arrow_back</span> Back to Admin Dashboard
+                    </a>
+                @elseif(Auth::guard('instructor')->check())
+                    <a href="{{ route('instructor.dashboard') }}" class="back-link">
+                        <span class="material-icons">arrow_back</span> Back to Instructor Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('dashboard') }}" class="back-link">
+                        <span class="material-icons">arrow_back</span> Back to Member Dashboard
+                    </a>
+                @endif
             </div>
-        @else
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Course Code</th>
-                            <th>Course Type</th>
-                            <th>Instructor Assigned</th>
-                            <th style="text-align: center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($courses as $course)
-                        <tr>
-                            <td><b>{{ $course->course_code }}</b></td> 
-                            <td>{{ $course->course_type }}</td>
-                            <td>{{ $course->instructor->name ?? $course->instructor_ID }}</td>
-                            
-                            <td style="display: flex; gap: 10px; justify-content: center;">
-                                <a href="{{ route('courses.edit', $course->course_ID ?? $course->id) }}" class="btn btn-edit">Edit</a>
 
-                                <form action="{{ route('courses.destroy', $course->course_ID ?? $course->id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this course?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-delete">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-
-        <div style="margin-top: 30px;">
-            <a href="{{ route('instructor.dashboard') }}" style="color: #007bff; text-decoration: none; font-weight: bold;">&larr; Back to Dashboard</a>
         </div>
-
     </div>
 </body>
 </html>

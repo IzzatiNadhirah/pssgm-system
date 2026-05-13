@@ -9,9 +9,10 @@ class SessionTimetable extends Model
 {
     use HasFactory;
 
+    // 1. Kenal pasti nama table
     protected $table = 'session_timetable';
-    
-    // Disable primary key auto-increment parameters for bridge tables
+
+    // 2. Disable default auto-increment sebab table ni guna composite primary key
     public $incrementing = false;
     protected $primaryKey = null;
 
@@ -21,4 +22,16 @@ class SessionTimetable extends Model
         'session_time',
         'capacity',
     ];
+
+    // Hubungan dengan Course
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_ID', 'course_ID');
+    }
+
+    // Hubungan dengan User (Pelajar)
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'user_ID', 'user_ID');
+    }
 }

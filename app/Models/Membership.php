@@ -20,6 +20,7 @@ class Membership extends Model
         'member_code',
         'member_type',
         'user_ID',
+        'expired_at', // Tambah ni!
     ];
 
     /**

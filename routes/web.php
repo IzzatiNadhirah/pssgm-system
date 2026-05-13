@@ -13,6 +13,7 @@ use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SessionTimetableController;
 use App\Http\Controllers\AuthController; 
+use App\Http\Controllers\EnrollmentController; // <--- 1. TAMBAH INI
 
 // ==========================================
 // 1. PUBLIC ROUTES (Anyone can access)
@@ -54,9 +55,19 @@ Route::middleware(['auth:web,staff,instructor'])->group(function () {
     Route::resource('cawangans', CawanganController::class);
     Route::resource('gelanggangs', GelanggangController::class);
     Route::resource('courses', CourseController::class);
+    
+    // Custom routes untuk Instructor set jadual
+    Route::get('/courses/{id}/schedule', [CourseController::class, 'editSchedule'])->name('courses.schedule');
+    Route::put('/courses/{id}/schedule', [CourseController::class, 'updateSchedule'])->name('courses.update_schedule');
+    
     Route::resource('memberships', MembershipController::class);
+    // Buang ->middleware('auth') kat hujung ni sebab dah duduk dalam group
+    Route::get('/membership/history', [MembershipController::class, 'history'])->name('membership.history'); 
+    
     Route::resource('payments', PaymentController::class);
     Route::resource('sessions', SessionTimetableController::class);
+    // Custom route untuk delete session guna composite key (Course ID & User ID)
+    Route::delete('sessions/{course_id}/{user_id}', [SessionTimetableController::class, 'destroy'])->name('sessions.destroy_custom');
 
     // Protected actions
     Route::resource('users', UserController::class)->except(['create', 'store']);
@@ -69,13 +80,19 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/dashboard', function () { 
         return view('user.dashboard'); 
     })->name('dashboard');
+
+    // <--- 2. TAMBAH ROUTE ENROLLMENT KAT SINI --->
+    // Kita letak sini supaya hanya User biasa (Amir) je boleh Join Training
+    Route::post('/enroll/{course_id}', [EnrollmentController::class, 'store'])->name('enroll.store');
+
+    //timetable
+    Route::get('/my-timetable', [EnrollmentController::class, 'myTimetable'])->name('timetable.index');
 });
 
 // --- STAFF ONLY ROUTES ---
 Route::middleware(['auth:staff'])->group(function () {
     
     // Pending Gelanggang Routes for Super Admin
-    // (Must be defined above the dashboard to keep routes organized)
     Route::get('/gelanggangs-pending', [GelanggangController::class, 'pending'])->name('gelanggangs.pending');
     Route::post('/gelanggangs/{id}/approve', [GelanggangController::class, 'approve'])->name('gelanggangs.approve');
     Route::post('/gelanggangs/{id}/reject', [GelanggangController::class, 'reject'])->name('gelanggangs.reject');
@@ -86,10 +103,7 @@ Route::middleware(['auth:staff'])->group(function () {
         // 1. If it is the Super Admin, fetch the stats and load the Admin view
         if ($staff->role === 'super_admin') {
             $totalMembers = \App\Models\User::count();
-            
-            // UPDATED: Only count active/approved Gelanggangs
             $totalGelanggang = \App\Models\Gelanggang::where('status', 'approved')->count(); 
-            
             $totalFees = \App\Models\Payment::sum('amount'); 
 
             return view('staff.admin_dashboard', compact('totalMembers', 'totalGelanggang', 'totalFees'));

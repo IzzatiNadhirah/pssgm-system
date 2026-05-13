@@ -1,0 +1,111 @@
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+    /* --- NAVIGATION BAR STYLE --- */
+    .navbar {
+        background-color: #000;
+        padding: 10px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #ffcc00; /* Gold Line */
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 12px; color: white; font-weight: bold; letter-spacing: 1px; }
+    .nav-logo-small { width: 40px; height: auto; }
+
+    .nav-center { display: flex; gap: 25px; }
+
+    /* FIX WARNA UNGU & LINK STYLE */
+    .nav-link {
+        color: white !important; 
+        text-decoration: none !important;
+        font-size: 0.9em;
+        font-weight: 600;
+        display: flex;
+        align-items: center; gap: 6px;
+        transition: 0.3s;
+    }
+    .nav-link:hover { color: #ffcc00 !important; }
+    .nav-link.active { color: #ffcc00 !important; }
+
+    .nav-right { display: flex; align-items: center; gap: 20px; }
+
+    .user-meta { text-align: right; color: white; line-height: 1.2; }
+    .user-meta .user-name { display: block; font-size: 0.9em; font-weight: bold; }
+    .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; text-transform: uppercase; }
+
+    .btn-logout-nav {
+        background-color: #cc0000; color: white; border: none; padding: 8px 15px;
+        border-radius: 6px; font-weight: bold; font-size: 0.85em; cursor: pointer;
+        display: flex; align-items: center; gap: 5px; transition: 0.3s;
+    }
+    .btn-logout-nav:hover { background-color: #ff0000; }
+
+    @media (max-width: 768px) { .nav-center { display: none; } }
+</style>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <img src="{{ asset('images/logo_gayong.png') }}" class="nav-logo-small" alt="PSSGM">
+        <span>PSSGM MELAKA</span>
+    </div>
+
+    <div class="nav-center">
+        @if(Auth::guard('staff')->check())
+            <a href="{{ route('staff.dashboard') }}" class="nav-link">
+                <span class="material-icons">admin_panel_settings</span> Admin Panel
+            </a>
+            <a href="{{ route('courses.index') }}" class="nav-link">
+                <span class="material-icons">list_alt</span> Manage Courses
+            </a>
+            <a href="#" class="nav-link">
+                <span class="material-icons">people</span> Members
+            </a>
+
+        @elseif(Auth::guard('instructor')->check())
+            <a href="{{ route('instructor.dashboard') }}" class="nav-link">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+            <a href="{{ route('courses.index') }}" class="nav-link">
+                <span class="material-icons">menu_book</span> My Courses
+            </a>
+            <a href="#" class="nav-link">
+                <span class="material-icons">fact_check</span> Attendance
+            </a>
+
+        @else
+            <a href="{{ route('dashboard') }}" class="nav-link">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+            <a href="{{ route('courses.index') }}" class="nav-link">
+                <span class="material-icons">fitness_center</span> Join Training
+            </a>
+            <a href="{{ route('membership.history') }}" class="nav-link">
+                <span class="material-icons">receipt_long</span> My Payments
+            </a>
+        @endif
+    </div>
+
+    <div class="nav-right">
+        <div class="user-meta">
+            @php
+                $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
+                $role = Auth::guard('staff')->check() ? 'System Staff' : (Auth::guard('instructor')->check() ? 'Instructor' : 'Active Warrior');
+            @endphp
+            <span class="user-name">{{ $user->name }}</span>
+            <span class="user-role">{{ $role }}</span>
+        </div>
+
+        <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+            @csrf
+            <button type="submit" class="btn-logout-nav">
+                <span class="material-icons" style="font-size: 18px;">logout</span> Logout
+            </button>
+        </form>
+    </div>
+</nav>
