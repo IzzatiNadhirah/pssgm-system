@@ -31,6 +31,11 @@
         .btn-join-now { background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 15px; transition: 0.2s; }
         .btn-join-now:hover { background: #218838; transform: translateY(-2px); }
 
+        .btn-drop { background-color: #cc0000; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
+        .btn-drop:hover { background-color: #aa0000; transform: translateY(-2px); }
+
+        .alert-success { background: #d4edda; color: #155724; padding: 15px; border-left: 5px solid #28a745; margin-bottom: 20px; border-radius: 4px; font-weight: bold; }
+
         .back-nav { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
         .back-nav a { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .back-nav a:hover { transform: translateX(-5px); color: #111; }
@@ -48,11 +53,18 @@
                 <h2>My Training Timetable</h2>
             </div>
 
+            @if (session('success'))
+                <div class="alert-success">
+                    <span class="material-icons" style="vertical-align: bottom; font-size: 18px;">check_circle</span> 
+                    {{ session('success') }}
+                </div>
+            @endif
+
             @if($enrollments->isEmpty())
                 <div class="empty-state">
                     <span class="material-icons">sports_martial_arts</span>
-                    <h3>Awak belum mendaftar mana-mana kelas lagi.</h3>
-                    <p>Sila semak senarai gelanggang dan daftar kelas latihan anda sekarang.</p>
+                    <h3>You have not enrolled in any classes yet.</h3>
+                    <p>Please browse the course directory and enroll in a training class now.</p>
                     <a href="{{ route('courses.index') }}" class="btn-join-now">Browse Courses</a>
                 </div>
             @else
@@ -65,6 +77,7 @@
                                 <th>Instructor</th>
                                 <th>Location (Gelanggang)</th>
                                 <th>Schedule</th>
+                                <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -80,6 +93,15 @@
                                     </td>
                                     <td style="color: #111;">
                                         <b>{{ $enrollment->course->session_time ?? 'TBA' }}</b>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <form action="{{ route('enroll.destroy', $enrollment->enroll_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to drop this class? This action cannot be undone.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-drop">
+                                                <span class="material-icons" style="font-size: 16px;">logout</span> Drop
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach

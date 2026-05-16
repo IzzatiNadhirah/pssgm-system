@@ -81,11 +81,13 @@ Route::middleware(['auth:web'])->group(function () {
         return view('user.dashboard'); 
     })->name('dashboard');
 
-    // <--- 2. TAMBAH ROUTE ENROLLMENT KAT SINI --->
-    // Kita letak sini supaya hanya User biasa (Amir) je boleh Join Training
+    // <--- ROUTE ENROLLMENT --->
     Route::post('/enroll/{course_id}', [EnrollmentController::class, 'store'])->name('enroll.store');
+    
+    // <--- ROUTE DROP CLASS (TARIK DIRI) --->
+    Route::delete('/enroll/{id}', [EnrollmentController::class, 'destroy'])->name('enroll.destroy');
 
-    //timetable
+    // <--- ROUTE TIMETABLE --->
     Route::get('/my-timetable', [EnrollmentController::class, 'myTimetable'])->name('timetable.index');
 });
 

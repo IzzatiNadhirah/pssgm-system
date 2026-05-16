@@ -3,73 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Dashboard</title>
+    <title>Super Admin Dashboard - PSSGM Melaka</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        .stat-box {
-            background-color: #f8f9fa;
-            border-left: 4px solid #28a745;
-            padding: 15px;
-            margin: 10px;
-            flex: 1;
-            text-align: center;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        /* CSS Khusus untuk Page Content */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
+        .content-area { padding: 40px 20px; display: flex; justify-content: center; }
+
+        .container { 
+            max-width: 1200px; width: 100%; background: white; padding: 40px; 
+            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
         }
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+
+        /* --- HEADER --- */
+        .header-area { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 30px; }
+        h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 2px; font-size: 2.2em; }
+        .subtitle { color: #555; font-size: 1.1em; margin-top: 10px; }
+        .status-badge { 
+            display: inline-flex; align-items: center; gap: 5px; background: #cce5ff; 
+            color: #004085; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin-top: 15px; 
+            border: 1px solid #b8daff;
         }
+
+        /* --- STATS BOXES --- */
+        .stats-container { display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
+        
+        .stat-card { 
+            flex: 1; min-width: 200px; background: #f9f9f9; padding: 25px; 
+            border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            border-left: 5px solid #111;
+        }
+        .stat-card.gold { border-left-color: #ffcc00; }
+        .stat-card.red { border-left-color: #cc0000; }
+        
+        .stat-card h4 { margin: 0; color: #666; text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px; }
+        .stat-card .value { font-size: 2.5em; font-weight: bold; color: #111; margin-top: 10px; display: block; }
+
+        /* --- GRID MENU CARDS --- */
+        .section-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; color: #111; font-size: 1.2em; }
+        
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        
+        .card-link { text-decoration: none; color: inherit; display: block; }
+        
+        .card { 
+            background: #111; color: white; padding: 25px 20px; border-radius: 12px; 
+            text-align: center; transition: 0.3s; border-bottom: 5px solid #cc0000; 
+            height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); border-bottom-color: #ffcc00; }
+        
+        /* KAD ALERT (Merah Terang untuk benda Pending) */
+        .card.alert-card { background: #cc0000; border-bottom-color: #111; }
+        .card.alert-card:hover { background: #aa0000; border-bottom-color: #ffcc00; }
+        .card.alert-card .material-icons { color: white; }
+        .card.alert-card p { color: #f8d7da; }
+
+        .card .material-icons { font-size: 42px; color: #ffcc00; margin-bottom: 15px; }
+        .card h3 { margin: 0 0 10px 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
+        .card p { margin: 0; font-size: 0.85em; color: #ccc; line-height: 1.4; }
     </style>
 </head>
 <body>
-    <div style="max-width: 900px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
-        
-        <h2>HQ Overview: Super Admin Dashboard</h2>
-        
-        <p>Welcome to the master control panel, <b>{{ Auth::guard('staff')->user()->name }}</b>!</p>
 
-        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <div class="stat-box" style="border-left-color: #007bff;">
-                <h3>Total Members</h3>
-                <div class="stat-number">{{ $totalMembers }}</div>
-            </div>
+    @include('layouts.navbar')
+
+    <div class="content-area">
+        <div class="container">
             
-            <div class="stat-box" style="border-left-color: #17a2b8;">
-                <h3>Active Gelanggang</h3>
-                <div class="stat-number">{{ $totalGelanggang }}</div>
+            <div class="header-area">
+                <h2>HQ Overview</h2>
+                <p class="subtitle">Welcome to the master control panel, <b>{{ Auth::guard('staff')->user()->name }}</b>!</p>
+                <div class="status-badge">
+                    <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span> Super Admin
+                </div>
             </div>
-            
-            <div class="stat-box" style="border-left-color: #28a745;">
-                <h3>Total Fees Collected</h3>
-                <div class="stat-number">RM {{ number_format($totalFees, 2) }}</div>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h4>Total Members</h4>
+                    <span class="value">{{ $totalMembers ?? 0 }}</span>
+                </div>
+                <div class="stat-card gold">
+                    <h4>Active Gelanggang</h4>
+                    <span class="value">{{ $totalGelanggang ?? 0 }}</span>
+                </div>
+                <div class="stat-card red">
+                    <h4>Total Fees Collected</h4>
+                    <span class="value">RM {{ number_format($totalFees ?? 0, 2) }}</span>
+                </div>
             </div>
+
+            <h3 class="section-title">System Management</h3>
+
+            <div class="grid-container">
+
+                <a href="{{ route('gelanggangs.pending') ?? '#' }}" class="card-link">
+                    <div class="card alert-card">
+                        <span class="material-icons">notification_important</span>
+                        <h3>Pending Approvals</h3>
+                        <p>Review and approve new Gelanggang registrations.</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('cawangans.index') ?? '#' }}" class="card-link">
+                    <div class="card">
+                        <span class="material-icons">domain</span>
+                        <h3>Manage Cawangan</h3>
+                        <p>Register and configure PSSGM branches.</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('gelanggangs.index') ?? '#' }}" class="card-link">
+                    <div class="card">
+                        <span class="material-icons">stadium</span>
+                        <h3>Active Gelanggang</h3>
+                        <p>View directory of all approved training locations.</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('users.index') ?? '#' }}" class="card-link">
+                    <div class="card">
+                        <span class="material-icons">manage_accounts</span>
+                        <h3>System Users</h3>
+                        <p>Manage members, instructors, and staff accounts.</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('payments.index') ?? '#' }}" class="card-link">
+                    <div class="card">
+                        <span class="material-icons">receipt_long</span>
+                        <h3>Payment Reports</h3>
+                        <p>View detailed reports of all transactions.</p>
+                    </div>
+                </a>
+
+            </div>
+
         </div>
-
-        <div style="margin: 30px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #6c757d;">
-            <h3>System Management</h3>
-            <ul>
-                <li><a href="{{ route('cawangans.index') }}">Manage Cawangan (Branches)</a></li>
-                
-                <li><a href="{{ route('gelanggangs.pending') }}" style="font-weight: bold; color: #d32f2f;">Review Pending Gelanggang Approvals</a></li>
-                
-                <li><a href="{{ route('gelanggangs.index') }}">View Active Gelanggang Directory</a></li>
-                
-                <li><a href="{{ route('users.index') }}">Manage All System Users</a></li>
-                
-                <li><a href="#">View Detailed Payment Reports</a></li>
-            </ul>
-        </div>
-
-        <hr>
-
-        <form action="{{ route('logout') }}" method="POST" style="margin-top: 20px;">
-            @csrf
-            <button type="submit" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Logout
-            </button>
-        </form>
-
     </div>
+
 </body>
 </html>

@@ -17,8 +17,15 @@ class CawanganController extends Controller
 
     public function create()
     {
-        // Fetch all staff members to populate the dropdown for the Super Admin
-        $staffs = Staff::all(); 
+        // 1. Cari ID staff yang DAH ADA cawangan (tak termasuk yang null)
+        $assignedStaffIds = Cawangan::whereNotNull('staff_ID')
+                                    ->pluck('staff_ID')
+                                    ->toArray();
+
+        // 2. Tarik senarai staff yang 'free' SAHAJA dan pastikan BUKAN super_admin
+        $staffs = Staff::whereNotIn('staff_ID', $assignedStaffIds)
+                       ->where('role', '!=', 'super_admin')
+                       ->get(); 
         
         return view('cawangan.create', compact('staffs'));
     }
@@ -48,11 +55,21 @@ class CawanganController extends Controller
         //
     }
 
-    // UPDATED: Fetch the specific record and load the edit view
+    // UPDATED: Fetch the specific record and load the edit view with FILTERED staff
     public function edit($id)
     {
         $cawangan = Cawangan::findOrFail($id);
-        $staffs = Staff::all(); 
+        
+        // 1. Cari ID staff yang dah pegang cawangan LAIN (Kecuali cawangan yang kita tengah edit ni)
+        $assignedStaffIds = Cawangan::whereNotNull('staff_ID')
+                                    ->where('caw_ID', '!=', $id)
+                                    ->pluck('staff_ID')
+                                    ->toArray();
+
+        // 2. Tarik senarai staff yang 'free' + staff yang memang tengah jaga cawangan ni, BUKAN super_admin
+        $staffs = Staff::whereNotIn('staff_ID', $assignedStaffIds)
+                       ->where('role', '!=', 'super_admin')
+                       ->get(); 
         
         return view('cawangan.edit', compact('cawangan', 'staffs'));
     }

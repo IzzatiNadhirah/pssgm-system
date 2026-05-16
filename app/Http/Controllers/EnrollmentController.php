@@ -13,56 +13,65 @@ class EnrollmentController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Cek kalau dia dah bayar membership ke belum
+        // 1. Check membership payment
         if (is_null($user->membership)) {
-            return redirect()->back()->with('error', 'Sila bayar yuran keahlian dulu sebelum Join Training!');
+            return redirect()->back()->with('error', 'Please pay the membership fee before joining the training!');
         }
 
-        // Ambil data kursus dulu supaya kita boleh buat validation
+        // Fetch course data
         $course = Course::findOrFail($course_id);
 
-        // 2. KUNCI KESELAMATAN: Pastikan kursus dah ada cikgu, tempat & masa
+        // 2. SAFETY LOCK: Ensure course details are complete
         if (empty($course->instructor_ID) || empty($course->gelanggang_ID) || empty($course->session_time)) {
-            return redirect()->back()->with('error', 'Pendaftaran disekat! Kursus ini belum mempunyai jadual atau tenaga pengajar yang lengkap.');
+            return redirect()->back()->with('error', 'Enrollment blocked! This course does not have a complete schedule or assigned instructor yet.');
         }
 
-        // 3. Cek kalau dia dah pernah daftar kelas yang sama
+        // 3. Check for duplicate enrollment
         $alreadyEnrolled = Enrollment::where('user_ID', $user->user_ID)
                                      ->where('course_ID', $course_id)
                                      ->exists();
 
         if ($alreadyEnrolled) {
-            return redirect()->back()->with('error', 'Awak dah pun berdaftar dalam kursus ini.');
+            return redirect()->back()->with('error', 'You are already enrolled in this course.');
         }
 
-        // 4. Cek kapasiti kelas kalau penuh
+        // 4. Check class capacity
         $currentEnrolled = Enrollment::where('course_ID', $course_id)->count();
         
         if ($course->capacity && $currentEnrolled >= $course->capacity) {
-            return redirect()->back()->with('error', 'Minta maaf, kelas ini sudah penuh!');
+            return redirect()->back()->with('error', 'Sorry, this class is already full!');
         }
 
-        // 5. Daftar masuk sistem!
+        // 5. Process enrollment
         Enrollment::create([
             'user_ID' => $user->user_ID,
             'course_ID' => $course_id,
             'enroll_date' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Tahniah! Awak dah berjaya daftar kelas ' . $course->course_type);
+        return redirect()->back()->with('success', 'Congratulations! You have successfully enrolled in ' . $course->course_type);
     }
 
     public function myTimetable()
     {
         $user = Auth::user();
 
-        // Cari semua pendaftaran (enrollment) milik user ni.
-        // Kita "tarik" sekali maklumat course, cikgu, dan gelanggang supaya senang nak papar.
         $enrollments = Enrollment::with(['course.instructor', 'course.gelanggang'])
                                  ->where('user_ID', $user->user_ID)
                                  ->orderBy('created_at', 'desc')
                                  ->get();
 
         return view('user.timetable', compact('enrollments'));
+    }
+
+    public function destroy($id)
+    {
+        $enrollment = Enrollment::where('enroll_ID', $id)
+                                ->where('user_ID', Auth::user()->user_ID)
+                                ->firstOrFail();
+
+        $enrollment->delete();
+
+        return redirect()->back()->with('success', 'You have successfully dropped the class.');
     }
 }
