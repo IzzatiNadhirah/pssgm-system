@@ -191,9 +191,10 @@
                     <label for="age_category">Age Category</label>
                     <select id="age_category" name="age_category" onchange="updateBengkung()" required>
                         <option value="" disabled selected>-- Select Category --</option>
-                        <option value="kanak" {{ old('age_category') == 'kanak' ? 'selected' : '' }}>Kanak-Kanak (7-12)</option>
-                        <option value="dewasa" {{ old('age_category') == 'dewasa' ? 'selected' : '' }}>Dewasa (13+)</option>
+                        <option value="kanak" {{ old('age_category') == 'kanak' ? 'selected' : '' }}>Kanak-Kanak</option>
+                        <option value="dewasa" {{ old('age_category') == 'dewasa' ? 'selected' : '' }}>Dewasa</option>
                     </select>
+                    <small id="age_display" style="color: #28a745; font-weight: bold;"></small>
                 </div>
 
                 <div class="form-group">
@@ -225,7 +226,7 @@
 
         let options = [];
         if (category === 'kanak') {
-            options = ['Hitam Kosong', 'Awan Putih Cula Hijau', 'Awan Putih Cula Merah', 'Awan Putih Cula Kuning', 'Awan Putih Cula Hitam' ]; 
+            options = ['Hitam Kosong', 'Awan Putih Cula Hijau', 'Awan Putih Cula Merah', 'Awan Putih Cula Kuning', 'Awan Putih Cula Hitam']; 
         } else if (category === 'dewasa') {
             options = ['Hitam Kosong', 'Awan Putih', 'Pelangi Hijau', 'Pelangi Merah (I - III)', 'Pelangi Kuning (I - IV)', 'Hitam Pelangi Cula Sakti (I - VI)']; 
         }
@@ -234,12 +235,72 @@
             let newOption = document.createElement('option');
             newOption.value = level;
             newOption.textContent = level;
+            // Kekalkan pilihan lama jika ada error validation dari server
+            if("{{ old('bengkung_level') }}" === level) {
+                newOption.selected = true;
+            }
             bengkungDropdown.appendChild(newOption);
         });
     }
 
+    function calculateAgeFromIC() {
+        let icValue = document.getElementById('icNo').value.replace(/-/g, ''); // Buang sengkang
+        let categorySelect = document.getElementById('age_category');
+        let ageDisplay = document.getElementById('age_display');
+
+        if (icValue.length >= 6) {
+            let year = parseInt(icValue.substring(0, 2));
+            let month = parseInt(icValue.substring(2, 4));
+            let day = parseInt(icValue.substring(4, 6));
+
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                let currentYear = new Date().getFullYear();
+                let currentYear2Digits = parseInt(currentYear.toString().slice(-2));
+
+                // Tentukan abad kelahiran (jika lahir tahun <= tahun semasa, cth: 26 -> 2026. Jika 99 -> 1999)
+                let birthYear = (year <= currentYear2Digits) ? 2000 + year : 1900 + year;
+                let birthDate = new Date(birthYear, month - 1, day);
+                let today = new Date();
+
+                // Kira umur yang tepat
+                let age = today.getFullYear() - birthDate.getFullYear();
+                let m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                // Pilih kategori & kunci (lock) dropdown
+                if (age >= 13) {
+                    categorySelect.value = 'dewasa';
+                    ageDisplay.textContent = 'Auto-calculated Age: ' + age + ' (Dewasa)';
+                } else {
+                    categorySelect.value = 'kanak';
+                    ageDisplay.textContent = 'Auto-calculated Age: ' + age + ' (Kanak-Kanak)';
+                }
+                
+                // Halang user dari mengubah kategori secara manual
+                categorySelect.style.pointerEvents = 'none';
+                categorySelect.style.backgroundColor = '#eee';
+                
+                // Terus kemaskini senarai bengkung
+                updateBengkung();
+            }
+        } else {
+            // Jika IC dipadam, buka balik kunci dropdown
+            categorySelect.style.pointerEvents = 'auto';
+            categorySelect.style.backgroundColor = '#fff';
+            ageDisplay.textContent = '';
+        }
+    }
+
+    // Pasang 'listener' supaya kiraan berjalan setiap kali pengguna menaip di ruangan IC
+    document.getElementById('icNo').addEventListener('input', calculateAgeFromIC);
+
+    // Semak pada waktu page loading (penting jika page direfresh kerana ada validation error)
     window.onload = function() {
-        if(document.getElementById('age_category').value) {
+        if(document.getElementById('icNo').value) {
+            calculateAgeFromIC();
+        } else if(document.getElementById('age_category').value) {
             updateBengkung();
         }
     };

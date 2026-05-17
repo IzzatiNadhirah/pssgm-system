@@ -62,10 +62,14 @@ class GelanggangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            // Tambah rule 'unique:gelanggang,gel_name'
+            'name' => 'required|string|max:255|unique:gelanggang,gel_name',
             'address' => 'required|string',
             'caw_ID' => 'required',
             'instructor_ID' => 'required',
+        ], [
+            // Custom error message
+            'name.unique' => 'Maaf, nama gelanggang ini sudah didaftarkan di dalam sistem. Sila guna nama lain.',
         ]);
 
         Gelanggang::create([
@@ -108,10 +112,15 @@ class GelanggangController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            // Tambah unique rule yang diubahsuai supaya tak error bila user tak tukar nama masa edit
+            // parameter akhir 'gel_ID' bermaksud abaikan ID gelanggang yang sedang di-edit ni
+            'name' => 'required|string|max:255|unique:gelanggang,gel_name,' . $id . ',gel_ID',
             'address' => 'required|string',
             'caw_ID' => 'required',
             'instructor_ID' => 'required',
+        ], [
+            // Custom error message
+            'name.unique' => 'Maaf, nama gelanggang ini sudah didaftarkan di dalam sistem. Sila guna nama lain.',
         ]);
 
         $gelanggang = Gelanggang::findOrFail($id);
