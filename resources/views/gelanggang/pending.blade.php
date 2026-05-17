@@ -100,8 +100,8 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Address</th>
-                                <th>Cawangan Code</th>
-                                <th>Instructor Code</th>
+                                <th>Cawangan Name</th>
+                                <th>Instructor Name</th>
                                 <th>Status</th>
                                 <th style="text-align: center;">Actions</th>
                             </tr>
@@ -109,10 +109,12 @@
                         <tbody>
                             @foreach($pendingGelanggangs as $gelanggang)
                             <tr>
-                                <td><b>{{ $gelanggang->gel_name }}</b></td>
+                                <td><b style="color: #222; font-size: 1.1em;">{{ $gelanggang->gel_name }}</b></td>
                                 <td>{{ $gelanggang->gel_address }}</td>
-                                <td>{{ $gelanggang->cawangan->caw_code ?? $gelanggang->caw_ID }}</td>
-                                <td>{{ $gelanggang->instructor->instructor_code ?? $gelanggang->instructor_ID }}</td>
+                                
+                                <td><b>{{ $gelanggang->cawangan->caw_name ?? 'N/A' }}</b></td>
+                                <td>{{ $gelanggang->instructor->name ?? 'Unknown Instructor' }}</td>
+                                
                                 <td><span class="badge-pending">Pending</span></td>
                                 <td style="display: flex; gap: 8px; justify-content: center;">
                                     

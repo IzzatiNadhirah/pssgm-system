@@ -12,11 +12,33 @@ class GelanggangController extends Controller
 {
     public function index()
     {
-        // Fetch only approved Gelanggangs and load the related letter codes
-        $activeGelanggangs = Gelanggang::with(['cawangan', 'instructor'])
-                                       ->where('status', 'approved')
-                                       ->get();
-                                       
+        // 1. Kenal pasti siapa yang tengah login
+        $staff = Auth::guard('staff')->user();
+
+        // 2. Kalau SUPER ADMIN: Tarik SEMUA data gelanggang (yang dah approve)
+        if ($staff->role === 'super_admin') {
+            $activeGelanggangs = Gelanggang::with(['cawangan', 'instructor'])
+                                           ->where('status', 'approved')
+                                           ->get();
+        } 
+        // 3. Kalau STAF BIASA (Pengurus Cawangan): Tarik gelanggang cawangan dia je
+        else {
+            // Cari cawangan mana yang staf ni jaga
+            $myCawangan = Cawangan::where('staff_ID', $staff->staff_ID ?? $staff->id)->first();
+
+            // Kalau staf ni memang ada pegang cawangan, tarik gelanggang dia
+            if ($myCawangan) {
+                $activeGelanggangs = Gelanggang::with(['cawangan', 'instructor'])
+                                               ->where('caw_ID', $myCawangan->caw_ID)
+                                               ->where('status', 'approved')
+                                               ->get();
+            } 
+            // Kalau staf ni takde pegang apa-apa cawangan lagi
+            else {
+                $activeGelanggangs = collect(); 
+            }
+        }
+
         return view('gelanggang.index', compact('activeGelanggangs'));
     }
 
@@ -29,7 +51,7 @@ class GelanggangController extends Controller
             $cawangans = Cawangan::all(); // HQ can assign to any branch
         } else {
             // Regular staff can ONLY register for the branch they manage
-            $cawangans = Cawangan::where('staff_ID', $user->staff_ID)->get(); 
+            $cawangans = Cawangan::where('staff_ID', $user->staff_ID ?? $user->id)->get(); 
         }
         
         $instructors = Instructor::all(); 
@@ -63,19 +85,55 @@ class GelanggangController extends Controller
         //
     }
 
-    public function edit(Gelanggang $gelanggang)
+    // ==========================================
+    // FUNGSI EDIT & UPDATE
+    // ==========================================
+    public function edit($id)
     {
-        //
+        $gelanggang = Gelanggang::findOrFail($id);
+        $user = Auth::guard('staff')->user();
+
+        // Sama macam create, Super Admin nampak semua cawangan, Staf nampak cawangan dia je
+        if ($user->role === 'super_admin') {
+            $cawangans = Cawangan::all();
+        } else {
+            $cawangans = Cawangan::where('staff_ID', $user->staff_ID ?? $user->id)->get(); 
+        }
+        
+        $instructors = Instructor::all(); 
+
+        return view('gelanggang.edit', compact('gelanggang', 'cawangans', 'instructors'));
     }
 
-    public function update(Request $request, Gelanggang $gelanggang)
+    public function update(Request $request, $id)
     {
-        //
-    }
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'caw_ID' => 'required',
+            'instructor_ID' => 'required',
+        ]);
 
-    public function destroy(Gelanggang $gelanggang)
+        $gelanggang = Gelanggang::findOrFail($id);
+        
+        $gelanggang->update([
+            'gel_name' => $request->name,
+            'gel_address' => $request->address,
+            'caw_ID' => $request->caw_ID,
+            'instructor_ID' => $request->instructor_ID,
+        ]);
+
+        return redirect()->route('gelanggangs.index')
+            ->with('success', 'Gelanggang details have been updated successfully!');
+    }
+    // ==========================================
+
+    public function destroy($id)
     {
-        //
+        $gelanggang = Gelanggang::findOrFail($id);
+        $gelanggang->delete();
+
+        return redirect()->route('gelanggangs.index')->with('success', 'Gelanggang deleted successfully.');
     }
 
     // ==========================================
@@ -89,7 +147,7 @@ class GelanggangController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // UPDATED: Eager load the relationships
+        // Eager load the relationships
         $pendingGelanggangs = Gelanggang::with(['cawangan', 'instructor'])
                                         ->where('status', 'pending')
                                         ->get();

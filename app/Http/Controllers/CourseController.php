@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Instructor;
+use App\Models\Gelanggang; // Wajib tambah ni untuk tarik data Gelanggang
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth; // Wajib tambah ni untuk guna fungsi login check
+use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
@@ -14,12 +15,14 @@ class CourseController extends Controller
     {
         // Jika yang login adalah Instructor, tunjuk kursus dia sahaja
         if (Auth::guard('instructor')->check()) {
-            $instructorId = Auth::guard('instructor')->user()->instructor_ID;
-            $courses = Course::with('instructor')->where('instructor_ID', $instructorId)->get();
+            $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
+            
+            // Tarik sekali data Gelanggang & Instructor supaya tak error kat jadual
+            $courses = Course::with(['instructor', 'gelanggang'])->where('instructor_ID', $instructorId)->get();
         } 
-        // Jika Staff (Admin) yang login, tunjuk semua kursus
+        // Jika Staff (Admin) atau Super Admin yang login, tunjuk semua kursus
         else {
-            $courses = Course::with('instructor')->get();
+            $courses = Course::with(['instructor', 'gelanggang'])->get();
         }
         
         return view('course.index', compact('courses'));
@@ -27,6 +30,11 @@ class CourseController extends Controller
 
     public function create()
     {
+        // Pastikan hanya staff/admin boleh akses create page
+        if (!Auth::guard('staff')->check()) {
+            abort(403, 'Unauthorized action. Only Admin Staff can register a course.');
+        }
+
         // Fetch all instructors to populate the dropdown
         $instructors = Instructor::all(); 
         
@@ -56,6 +64,11 @@ class CourseController extends Controller
 
     public function edit($id)
     {
+        // Pastikan hanya staff/admin boleh akses edit page
+        if (!Auth::guard('staff')->check()) {
+            abort(403, 'Unauthorized action. Only Admin Staff can edit a course.');
+        }
+
         $course = Course::findOrFail($id);
         $instructors = Instructor::all();
         
@@ -81,23 +94,35 @@ class CourseController extends Controller
 
     public function destroy($id)
     {
+        // Pastikan hanya staff/admin boleh padam kursus
+        if (!Auth::guard('staff')->check()) {
+            abort(403, 'Unauthorized action. Only Admin Staff can delete a course.');
+        }
+
         $course = Course::findOrFail($id);
         $course->delete();
 
         return redirect()->route('courses.index')->with('success', 'Course deleted successfully!');
     }
 
-    // Memaparkan borang set jadual
+    // ==========================================
+    // FUNGSI UNTUK INSTRUCTOR SET JADUAL
+    // ==========================================
+
     public function editSchedule($id)
     {
         $course = Course::findOrFail($id);
+        $instructor = Auth::guard('instructor')->user();
         
-        if (Auth::guard('instructor')->check() && $course->instructor_ID != Auth::guard('instructor')->user()->instructor_ID) {
-            abort(403, 'Anda tiada kebenaran untuk ubah jadual kursus ini.');
+        // Halang instructor lain atau staff dari ubah jadual yang bukan hak dia
+        if (!Auth::guard('instructor')->check() || $course->instructor_ID != ($instructor->instructor_ID ?? $instructor->id)) {
+            abort(403, 'Unauthorized action. You do not have permission to edit this schedule.');
         }
 
-        // Cari SEMUA gelanggang yang Instructor ni ajar
-        $gelanggangs = \App\Models\Gelanggang::where('instructor_ID', $course->instructor_ID)->get();
+        // Cari SEMUA gelanggang yang Instructor ni ajar (dan yang dah di-approve oleh HQ)
+        $gelanggangs = Gelanggang::where('instructor_ID', $course->instructor_ID)
+                                 ->where('status', 'approved')
+                                 ->get();
 
         return view('course.schedule', compact('course', 'gelanggangs'));
     }
@@ -125,5 +150,20 @@ class CourseController extends Controller
         ]);
 
         return redirect()->route('courses.index')->with('success', 'Class schedule updated successfully!');
+    }
+
+    // ==========================================
+    // FUNGSI UNTUK LIHAT SENARAI PELAJAR
+    // ==========================================
+    public function enrolledStudents()
+    {
+        $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
+        
+        // Tarik kursus milik instructor ni, dan tarik sekali data pendaftaran (enrollments) berserta data User (pelajar)
+        $courses = Course::with(['gelanggang', 'enrollments.user']) 
+                         ->where('instructor_ID', $instructorId)
+                         ->get();
+
+        return view('instructor.enrolled', compact('courses'));
     }
 }

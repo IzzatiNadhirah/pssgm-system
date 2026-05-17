@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Staff; // WAJIB TAMBAH NI supaya controller kenal table staff
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,10 +11,14 @@ class UserController extends Controller
 {
     public function index()
     {
-        // Eager load the membership relationship
-        $users = User::with('membership')->get();
+        // 1. Ambil semua data ahli biasa (tukarkan nama $users ke $members supaya match dengan blade)
+        $members = User::with('membership')->orderBy('user_ID', 'asc')->get();
         
-        return view('user.index', compact('users'));
+        // 2. Ambil semua data staf pengurusan
+        $staffs = Staff::orderBy('staff_ID', 'asc')->get();
+        
+        // 3. Hantar kedua-dua data ke paparan senarai pengurusan user
+        return view('user.index', compact('members', 'staffs'));
     }
 
     public function create()

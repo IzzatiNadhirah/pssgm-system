@@ -22,7 +22,8 @@ class EnrollmentController extends Controller
         $course = Course::findOrFail($course_id);
 
         // 2. SAFETY LOCK: Ensure course details are complete
-        if (empty($course->instructor_ID) || empty($course->gelanggang_ID) || empty($course->session_time)) {
+        // DIBETULKAN: Tukar gelanggang_ID kepada gel_ID
+        if (empty($course->instructor_ID) || empty($course->gel_ID) || empty($course->session_time)) {
             return redirect()->back()->with('error', 'Enrollment blocked! This course does not have a complete schedule or assigned instructor yet.');
         }
 

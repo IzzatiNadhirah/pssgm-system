@@ -13,14 +13,14 @@ use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SessionTimetableController;
 use App\Http\Controllers\AuthController; 
-use App\Http\Controllers\EnrollmentController; // <--- 1. TAMBAH INI
+use App\Http\Controllers\EnrollmentController;
 
 // ==========================================
 // 1. PUBLIC ROUTES (Anyone can access)
 // ==========================================
-Route::get('/', function () {
-    return view('welcome');
-});
+
+// <--- Auto-redirect ke muka pintu Login --->
+Route::redirect('/', '/login');
 
 // Login Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -61,7 +61,6 @@ Route::middleware(['auth:web,staff,instructor'])->group(function () {
     Route::put('/courses/{id}/schedule', [CourseController::class, 'updateSchedule'])->name('courses.update_schedule');
     
     Route::resource('memberships', MembershipController::class);
-    // Buang ->middleware('auth') kat hujung ni sebab dah duduk dalam group
     Route::get('/membership/history', [MembershipController::class, 'history'])->name('membership.history'); 
     
     Route::resource('payments', PaymentController::class);
@@ -121,4 +120,7 @@ Route::middleware(['auth:instructor'])->group(function () {
     Route::get('/instructor/dashboard', function () { 
         return view('instructor.dashboard'); 
     })->name('instructor.dashboard');
+
+    // <--- SAYA DAH TAMBAH ROUTE ENROLLED STUDENTS KAT SINI --->
+    Route::get('/instructor/enrolled-students', [CourseController::class, 'enrolledStudents'])->name('instructor.enrolled');
 });

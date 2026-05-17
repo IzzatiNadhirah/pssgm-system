@@ -69,7 +69,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('gelanggangs.create') ?? '#' }}" class="card-link">
+                <a href="{{ route('gelanggangs.index') }}" class="card-link">
                     <div class="card">
                         <span class="material-icons">stadium</span>
                         <h3>Manage Gelanggang</h3>
@@ -85,7 +85,7 @@
                     </div>
                 </a>
 
-                <a href="#" class="card-link">
+                <a href="{{ route('users.index') }}" class="card-link">
                     <div class="card">
                         <span class="material-icons">people</span>
                         <h3>System Users</h3>

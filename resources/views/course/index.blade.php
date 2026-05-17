@@ -6,7 +6,7 @@
     <title>Course Directory - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        /* CSS Khusus untuk Page Content sahaja (Navbar CSS dah ada dalam include) */
+        /* CSS Khusus untuk Page Content sahaja */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #111; 
@@ -14,68 +14,29 @@
             min-height: 100vh;
         }
 
-        .content-area {
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-        }
+        .content-area { padding: 40px 20px; display: flex; justify-content: center; }
 
         .container { 
-            max-width: 1200px; 
-            width: 100%;
-            background: white; 
-            padding: 35px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-top: 8px solid #cc0000;
-            border-bottom: 8px solid #ffcc00;
+            max-width: 1200px; width: 100%; background: white; padding: 35px; 
+            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
         }
         
-        .header-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
         h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        
-        th { 
-            background-color: #111; 
-            color: #ffcc00; 
-            font-weight: bold; 
-            text-transform: uppercase;
-            font-size: 0.85em;
-        }
-        
+        th { background-color: #111; color: #ffcc00; font-weight: bold; text-transform: uppercase; font-size: 0.85em; }
         tr:hover { background-color: #fffdf5; }
         
-        .btn { 
-            padding: 8px 16px; 
-            border: none; 
-            cursor: pointer; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            text-decoration: none; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 5px;
-            font-size: 0.85em; 
-            transition: 0.2s;
-        }
-        
+        .btn { padding: 8px 16px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
         .btn-add { background-color: #cc0000; color: white; }
         .btn-edit { background-color: #ffcc00; color: #111; }
         .btn-delete { background-color: #333; color: white; }
         .btn-schedule { background-color: #17a2b8; color: white; }
         .btn-join { background-color: #28a745; color: white; }
         .btn-disabled { background-color: #6c757d; color: white; cursor: not-allowed; opacity: 0.8; }
-
         .btn:hover:not(.btn-disabled) { opacity: 0.9; transform: translateY(-2px); }
 
         .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
@@ -120,42 +81,51 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Course Code</th>
-                                <th>Type</th>
-                                <th>Instructor</th>
+                                <th>Course Type</th>
+                                <th>Assigned Instructor</th>
+                                
                                 <th>Location</th>
-                                <th>Schedule</th>
-                                <th>Capacity</th>
+                                
+                                {{-- SEMBUNYIKAN 2 COLUMN NI DARIPADA STAFF --}}
+                                @if(!Auth::guard('staff')->check())
+                                    <th>Schedule</th>
+                                    <th>Capacity</th>
+                                @endif
+                                
                                 <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($courses as $course)
                             <tr>
-                                <td><b>{{ $course->course_code }}</b></td> 
-                                <td>{{ $course->course_type }}</td>
+                                <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
                                 <td>{{ $course->instructor->name ?? 'Unassigned' }}</td>
+                                
                                 <td>{{ $course->gelanggang->gel_name ?? 'Not Set' }}</td>
-                                <td style="color: {{ $course->session_time ? '#111' : '#cc0000' }};">
-                                    <b>{{ $course->session_time ?? 'Not Scheduled' }}</b>
-                                </td>
-                                <td>{{ $course->capacity ?? '-' }} Pax</td>
+                                
+                                {{-- SEMBUNYIKAN DATA NI DARIPADA STAFF --}}
+                                @if(!Auth::guard('staff')->check())
+                                    <td style="color: {{ $course->session_time ? '#111' : '#cc0000' }};">
+                                        <b>{{ $course->session_time ?? 'Not Scheduled' }}</b>
+                                    </td>
+                                    <td>{{ $course->capacity ?? '-' }} Pax</td>
+                                @endif
                                 
                                 <td style="display: flex; gap: 8px; justify-content: center;">
                                     {{-- STAFF ACTIONS --}}
                                     @if(Auth::guard('staff')->check())
-                                        <a href="{{ route('courses.edit', $course->course_ID) }}" class="btn btn-edit" title="Edit">
+                                        <a href="{{ route('courses.edit', $course->course_ID ?? $course->id) }}" class="btn btn-edit" title="Edit">
                                             <span class="material-icons">edit</span>
                                         </a>
-                                        <form action="{{ route('courses.destroy', $course->course_ID) }}" method="POST" onsubmit="return confirm('Delete course?');">
+                                        <form action="{{ route('courses.destroy', $course->course_ID ?? $course->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this course?');">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-delete"><span class="material-icons">delete</span></button>
+                                            <button type="submit" class="btn btn-delete" title="Delete Course"><span class="material-icons">delete</span></button>
                                         </form>
                                     @endif
 
                                     {{-- INSTRUCTOR ACTIONS --}}
                                     @if(Auth::guard('instructor')->check() && Auth::guard('instructor')->user()->instructor_ID == $course->instructor_ID)
-                                        <a href="{{ route('courses.schedule', $course->course_ID) }}" class="btn btn-schedule">
+                                        <a href="{{ route('courses.schedule', $course->course_ID ?? $course->id) }}" class="btn btn-schedule">
                                             <span class="material-icons">event</span> Set Schedule
                                         </a>
                                     @endif
@@ -163,16 +133,15 @@
                                     {{-- MEMBER ACTIONS (JOIN TRAINING) --}}
                                     @if(!Auth::guard('staff')->check() && !Auth::guard('instructor')->check())
                                         
-                                        {{-- LOGIK BARU: Cek kalau maklumat kursus lengkap --}}
-                                        @if($course->instructor_ID && $course->gelanggang_ID && $course->session_time)
-                                            <form action="{{ route('enroll.store', $course->course_ID) }}" method="POST">
+                                        {{-- DIBETULKAN: Tukar gelanggang_ID ke gel_ID --}}
+                                        @if($course->instructor_ID && $course->gel_ID && $course->session_time)
+                                            <form action="{{ route('enroll.store', $course->course_ID ?? $course->id) }}" method="POST">
                                                 @csrf
                                                 <button type="submit" class="btn btn-join">
                                                     <span class="material-icons">add_circle</span> Join Training
                                                 </button>
                                             </form>
                                         @else
-                                            {{-- Butang kelabu kalau tak lengkap (Berdasarkan perbincangan tadi) --}}
                                             <button type="button" class="btn btn-disabled" title="Class not ready for enrollment">
                                                 <span class="material-icons">lock</span> Not Ready
                                             </button>

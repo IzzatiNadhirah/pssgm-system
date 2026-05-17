@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Course - PSSGM Melaka</title>
+    <title>Edit Gelanggang - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
@@ -12,15 +12,15 @@
         .container { 
             max-width: 800px; width: 100%; background: white; padding: 40px; 
             border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
+            border-top: 8px solid #ffcc00; /* Kuning/Emas untuk mode Edit */
+            border-bottom: 8px solid #cc0000; 
         }
 
         .header-area { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 30px; }
-        .header-area .material-icons { font-size: 32px; color: #cc0000; }
+        .header-area .material-icons { font-size: 32px; color: #ffcc00; }
         h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
 
         /* --- ALERTS --- */
-        .alert-success { background: #d4edda; color: #155724; padding: 15px; border-left: 5px solid #28a745; margin-bottom: 20px; border-radius: 4px; font-weight: bold; display: flex; align-items: center; gap: 10px;}
         .alert-error { background: #f8d7da; color: #721c24; padding: 15px; border-left: 5px solid #dc3545; margin-bottom: 20px; border-radius: 4px; }
         .alert-error ul { margin: 10px 0 0 0; padding-left: 20px; }
         .alert-error li { margin-bottom: 5px; }
@@ -33,15 +33,16 @@
             width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; 
             box-sizing: border-box; font-family: inherit; font-size: 1em; transition: 0.3s;
         }
-        .form-control:focus { border-color: #cc0000; outline: none; box-shadow: 0 0 5px rgba(204,0,0,0.4); }
+        .form-control:focus { border-color: #ffcc00; outline: none; box-shadow: 0 0 5px rgba(255,204,0,0.4); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
 
         .btn-submit { 
-            background-color: #cc0000; color: white; border: none; padding: 14px 24px; 
+            background-color: #ffcc00; color: #111; border: none; padding: 14px 24px; 
             font-size: 1em; font-weight: bold; border-radius: 6px; cursor: pointer; 
             transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; 
             width: 100%; justify-content: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-submit:hover { background-color: #a30000; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(204,0,0,0.3); }
+        .btn-submit:hover { background-color: #e6b800; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,204,0,0.3); }
 
         .back-nav { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; }
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; }
@@ -56,16 +57,9 @@
         <div class="container">
             
             <div class="header-area">
-                <span class="material-icons">menu_book</span>
-                <h2>Register New Course</h2>
+                <span class="material-icons">edit_location_alt</span>
+                <h2>Edit Gelanggang: {{ $gelanggang->gel_name }}</h2>
             </div>
-
-            @if (session('success'))
-                <div class="alert-success">
-                    <span class="material-icons" style="font-size: 18px;">check_circle</span>
-                    {{ session('success') }}
-                </div>
-            @endif
 
             @if ($errors->any())
                 <div class="alert-error">
@@ -78,25 +72,38 @@
                 </div>
             @endif
 
-            <form action="{{ route('courses.store') }}" method="POST">
+            <form action="{{ route('gelanggangs.update', $gelanggang->gel_ID ?? $gelanggang->id) }}" method="POST">
                 @csrf 
+                @method('PUT')
 
                 <div class="form-group">
-                    <label for="course_type">Course Type:</label>
-                    <select id="course_type" name="course_type" class="form-control" required>
-                        <option value="" disabled selected>-- Select Course Type --</option>
-                        <option value="Silat Olahraga">Silat Olahraga</option>
-                        <option value="Silat Seni">Silat Seni</option>
-                        <option value="Pelajaran Silibus">Pelajaran Silibus</option>
+                    <label for="name">Gelanggang Name:</label>
+                    <input type="text" id="name" name="name" class="form-control" value="{{ old('name', $gelanggang->gel_name) }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <textarea id="address" name="address" class="form-control" required>{{ old('address', $gelanggang->gel_address) }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="caw_ID">Assign to Cawangan (Branch):</label>
+                    <select id="caw_ID" name="caw_ID" class="form-control" required>
+                        <option value="" disabled>-- Select Cawangan --</option>
+                        @foreach($cawangans as $cawangan)
+                            <option value="{{ $cawangan->caw_ID ?? $cawangan->id }}" {{ (old('caw_ID', $gelanggang->caw_ID) == ($cawangan->caw_ID ?? $cawangan->id)) ? 'selected' : '' }}>
+                                {{ $cawangan->caw_name }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="instructor_ID">Assign Instructor:</label>
                     <select id="instructor_ID" name="instructor_ID" class="form-control" required>
-                        <option value="" disabled selected>-- Select Instructor --</option>
+                        <option value="" disabled>-- Select Instructor --</option>
                         @foreach($instructors as $instructor)
-                            <option value="{{ $instructor->instructor_ID ?? $instructor->id }}">
+                            <option value="{{ $instructor->instructor_ID ?? $instructor->id }}" {{ (old('instructor_ID', $gelanggang->instructor_ID) == ($instructor->instructor_ID ?? $instructor->id)) ? 'selected' : '' }}>
                                 {{ $instructor->name }}
                             </option>
                         @endforeach
@@ -104,12 +111,12 @@
                 </div>
 
                 <button type="submit" class="btn-submit">
-                    <span class="material-icons">save</span> Register Course
+                    <span class="material-icons">update</span> Update Gelanggang
                 </button>
             </form>
 
             <div class="back-nav">
-                <a href="{{ route('courses.index') }}" class="back-link">
+                <a href="{{ route('gelanggangs.index') }}" class="back-link">
                     <span class="material-icons">cancel</span> Cancel & Back
                 </a>
             </div>
