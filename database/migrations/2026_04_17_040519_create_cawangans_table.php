@@ -22,6 +22,9 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            -- PADAM SEQUENCE CAWANGAN LAMA (JIKA ADA)
+            DROP SEQUENCE IF EXISTS cawangan_seq CASCADE;
+
             CREATE SEQUENCE cawangan_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_cawangan_code()
@@ -44,7 +47,7 @@ return new class extends Migration
         DB::unprepared("
             DROP TRIGGER IF EXISTS set_cawangan_code ON cawangan;
             DROP FUNCTION IF EXISTS generate_cawangan_code();
-            DROP SEQUENCE IF EXISTS cawangan_seq;
+            DROP SEQUENCE IF EXISTS cawangan_seq CASCADE;
         ");
         Schema::dropIfExists('cawangan');
     }

@@ -25,6 +25,9 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            -- PADAM SEQUENCE GELANGGANG LAMA (JIKA ADA)
+            DROP SEQUENCE IF EXISTS gelanggang_seq CASCADE;
+
             CREATE SEQUENCE gelanggang_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_gelanggang_code()
@@ -47,7 +50,7 @@ return new class extends Migration
         DB::unprepared("
             DROP TRIGGER IF EXISTS set_gelanggang_code ON gelanggang;
             DROP FUNCTION IF EXISTS generate_gelanggang_code();
-            DROP SEQUENCE IF EXISTS gelanggang_seq;
+            DROP SEQUENCE IF EXISTS gelanggang_seq CASCADE;
         ");
         Schema::dropIfExists('gelanggang');
     }

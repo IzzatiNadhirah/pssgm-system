@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - PSSGM Melaka Management System</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -72,7 +73,7 @@
             font-size: 14px;
         }
 
-        input[type="email"], input[type="password"] {
+        input[type="email"], input[type="password"], input[type="text"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #eee;
@@ -158,7 +159,12 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="password" name="password" required placeholder="••••••••" style="padding-right: 40px;">
+                    <span id="togglePasswordIcon" class="material-icons" onclick="togglePassword('password', 'togglePasswordIcon')" style="position: absolute; right: 10px; cursor: pointer; color: #666; user-select: none;">
+                        visibility_off
+                    </span>
+                </div>
             </div>
 
             <button type="submit" class="btn-login">Sign In</button>
@@ -174,5 +180,21 @@
         </div>
     </div>
 
+    <script>
+        function togglePassword(inputId, iconId) {
+            var pwdInput = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            
+            if (pwdInput.type === "password") {
+                pwdInput.type = "text";
+                icon.textContent = "visibility";
+                icon.style.color = "#cc0000"; // Tukar merah bila password nampak
+            } else {
+                pwdInput.type = "password";
+                icon.textContent = "visibility_off";
+                icon.style.color = "#666"; // Balik kelabu
+            }
+        }
+    </script>
 </body>
 </html>

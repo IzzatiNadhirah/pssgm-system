@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Registration - PSSGM Melaka</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -183,7 +184,12 @@
 
                 <div class="form-group">
                     <label for="password">Account Password</label>
-                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="password" name="password" required placeholder="••••••••" style="padding-right: 40px;">
+                        <span id="togglePasswordIcon" class="material-icons" onclick="togglePassword('password', 'togglePasswordIcon')" style="position: absolute; right: 10px; cursor: pointer; color: #666; user-select: none;">
+                            visibility_off
+                        </span>
+                    </div>
                     <small>* Minimum 8 characters</small>
                 </div>
 
@@ -219,6 +225,21 @@
     </div>
 
     <script>
+    function togglePassword(inputId, iconId) {
+        var pwdInput = document.getElementById(inputId);
+        var icon = document.getElementById(iconId);
+        
+        if (pwdInput.type === "password") {
+            pwdInput.type = "text";
+            icon.textContent = "visibility";
+            icon.style.color = "#cc0000"; // Merah PSSGM bila nampak password
+        } else {
+            pwdInput.type = "password";
+            icon.textContent = "visibility_off";
+            icon.style.color = "#666"; // Kembali kelabu
+        }
+    }
+
     function updateBengkung() {
         const category = document.getElementById('age_category').value;
         const bengkungDropdown = document.getElementById('bengkung_level');

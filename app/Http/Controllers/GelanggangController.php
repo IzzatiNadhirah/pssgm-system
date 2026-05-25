@@ -16,7 +16,7 @@ class GelanggangController extends Controller
         $staff = Auth::guard('staff')->user();
 
         // 2. Kalau SUPER ADMIN: Tarik SEMUA data gelanggang (yang dah approve)
-        if ($staff->role === 'super_admin') {
+        if ($staff->role === 'admin') { // DITUKAR KE 'admin'
             $activeGelanggangs = Gelanggang::with(['cawangan', 'instructor'])
                                            ->where('status', 'approved')
                                            ->get();
@@ -47,7 +47,7 @@ class GelanggangController extends Controller
         $user = Auth::guard('staff')->user();
 
         // 1. Check if it's the Super Admin or Regular Staff
-        if ($user->role === 'super_admin') {
+        if ($user->role === 'admin') { // DITUKAR KE 'admin'
             $cawangans = Cawangan::all(); // HQ can assign to any branch
         } else {
             // Regular staff can ONLY register for the branch they manage
@@ -62,13 +62,11 @@ class GelanggangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // Tambah rule 'unique:gelanggang,gel_name'
             'name' => 'required|string|max:255|unique:gelanggang,gel_name',
             'address' => 'required|string',
             'caw_ID' => 'required',
             'instructor_ID' => 'required',
         ], [
-            // Custom error message
             'name.unique' => 'Maaf, nama gelanggang ini sudah didaftarkan di dalam sistem. Sila guna nama lain.',
         ]);
 
@@ -77,7 +75,7 @@ class GelanggangController extends Controller
             'gel_address' => $request->address,
             'caw_ID' => $request->caw_ID,
             'instructor_ID' => $request->instructor_ID,
-            'status' => 'pending', // FORCES EVERY NEW ENTRY TO 'PENDING'
+            'status' => 'pending', 
         ]);
 
         return redirect()->route('gelanggangs.create')
@@ -97,8 +95,8 @@ class GelanggangController extends Controller
         $gelanggang = Gelanggang::findOrFail($id);
         $user = Auth::guard('staff')->user();
 
-        // Sama macam create, Super Admin nampak semua cawangan, Staf nampak cawangan dia je
-        if ($user->role === 'super_admin') {
+        // Sama macam create, Super Admin nampak semua cawangan, ...
+        if ($user->role === 'admin') { // DITUKAR KE 'admin'
             $cawangans = Cawangan::all();
         } else {
             $cawangans = Cawangan::where('staff_ID', $user->staff_ID ?? $user->id)->get(); 
@@ -112,14 +110,11 @@ class GelanggangController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            // Tambah unique rule yang diubahsuai supaya tak error bila user tak tukar nama masa edit
-            // parameter akhir 'gel_ID' bermaksud abaikan ID gelanggang yang sedang di-edit ni
             'name' => 'required|string|max:255|unique:gelanggang,gel_name,' . $id . ',gel_ID',
             'address' => 'required|string',
             'caw_ID' => 'required',
             'instructor_ID' => 'required',
         ], [
-            // Custom error message
             'name.unique' => 'Maaf, nama gelanggang ini sudah didaftarkan di dalam sistem. Sila guna nama lain.',
         ]);
 
@@ -152,7 +147,8 @@ class GelanggangController extends Controller
     // Fetch pending applications for the Super Admin view
     public function pending()
     {
-        if (Auth::guard('staff')->user()->role !== 'super_admin') {
+        // DITUKAR KE 'admin'
+        if (Auth::guard('staff')->user()->role !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 

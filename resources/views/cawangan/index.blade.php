@@ -122,9 +122,9 @@
             @endif
 
             <div class="footer-nav">
-                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'super_admin')
+                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'admin')
                     <a href="{{ route('staff.dashboard') }}" class="back-link">
-                        <span class="material-icons">arrow_back</span> Back to Super Admin Dashboard
+                        <span class="material-icons">arrow_back</span> Back to Admin Dashboard
                     </a>
                 @else
                     <a href="{{ route('staff.dashboard') }}" class="back-link">

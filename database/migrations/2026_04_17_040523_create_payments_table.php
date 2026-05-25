@@ -24,6 +24,8 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            DROP SEQUENCE IF EXISTS payment_seq CASCADE;
+
             CREATE SEQUENCE payment_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_payment_code()

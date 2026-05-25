@@ -63,9 +63,13 @@
             <a href="{{ route('courses.index') }}" class="nav-link">
                 <span class="material-icons">list_alt</span> Manage Courses
             </a>
-            <a href="#" class="nav-link">
-                <span class="material-icons">people</span> Members
-            </a>
+            
+            {{-- PENGHADANG KESELAMATAN: Hanya staff berpangkat 'admin' nampak menu ni --}}
+            @if(strtolower(Auth::guard('staff')->user()->role) === 'admin')
+                <a href="{{ route('users.index') }}" class="nav-link">
+                    <span class="material-icons">people</span> Members
+                </a>
+            @endif
 
         @elseif(Auth::guard('instructor')->check())
             <a href="{{ route('instructor.dashboard') }}" class="nav-link">
@@ -95,7 +99,15 @@
         <div class="user-meta">
             @php
                 $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
-                $role = Auth::guard('staff')->check() ? 'System Staff' : (Auth::guard('instructor')->check() ? 'Instructor' : 'Active Warrior');
+                
+                // LOGIK BAHARU UNTUK TENTUKAN PANGKAT (ROLE) DENGAN TEPAT
+                if (Auth::guard('staff')->check()) {
+                    $role = strtolower(Auth::guard('staff')->user()->role) === 'admin' ? 'Admin' : 'System Staff';
+                } elseif (Auth::guard('instructor')->check()) {
+                    $role = 'Instructor';
+                } else {
+                    $role = 'Active Warrior';
+                }
             @endphp
             <span class="user-name">{{ $user->name }}</span>
             <span class="user-role">{{ $role }}</span>

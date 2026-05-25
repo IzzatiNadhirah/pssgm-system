@@ -10,7 +10,7 @@
         .content-area { padding: 40px 20px; display: flex; justify-content: center; }
         
         .container { 
-            max-width: 1100px; width: 100%; background: white; padding: 40px; 
+            max-width: 1000px; width: 100%; background: white; padding: 40px; 
             border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
         }
@@ -27,7 +27,7 @@
         }
 
         /* --- GRID CARDS STYLES --- */
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; justify-content: center; }
         
         .card-link { text-decoration: none; color: inherit; display: block; }
         
@@ -53,21 +53,13 @@
             
             <div class="header-area">
                 <h2>Staff Dashboard</h2>
-                <p class="subtitle">Welcome back to the Admin Staff panel, <b>{{ Auth::guard('staff')->user()->name }}</b>!</p>
+                <p class="subtitle">Welcome back to the Staff panel, <b>{{ Auth::guard('staff')->user()->name }}</b>!</p>
                 <div class="status-badge">
-                    <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span> System Administrator
+                    <span class="material-icons" style="font-size: 18px;">badge</span> Branch Administrator
                 </div>
             </div>
 
             <div class="grid-container">
-                
-                <a href="{{ route('courses.index') }}" class="card-link">
-                    <div class="card">
-                        <span class="material-icons">menu_book</span>
-                        <h3>Course Directory</h3>
-                        <p>Manage silat courses, assign instructors, and update schedules.</p>
-                    </div>
-                </a>
 
                 <a href="{{ route('gelanggangs.index') }}" class="card-link">
                     <div class="card">
@@ -77,27 +69,11 @@
                     </div>
                 </a>
 
-                <a href="#" class="card-link">
+                <a href="{{ route('courses.index') }}" class="card-link">
                     <div class="card">
-                        <span class="material-icons">account_balance</span>
-                        <h3>My Cawangan</h3>
-                        <p>View and manage your district branch information.</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('users.index') }}" class="card-link">
-                    <div class="card">
-                        <span class="material-icons">people</span>
-                        <h3>System Users</h3>
-                        <p>Manage registered members, instructors, and staff accounts.</p>
-                    </div>
-                </a>
-
-                <a href="#" class="card-link">
-                    <div class="card">
-                        <span class="material-icons">payments</span>
-                        <h3>Fee & Memberships</h3>
-                        <p>Track membership registrations and verify payment receipts.</p>
+                        <span class="material-icons">menu_book</span>
+                        <h3>Course Directory</h3>
+                        <p>Manage silat courses, assign instructors, and update schedules.</p>
                     </div>
                 </a>
 

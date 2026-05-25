@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Session - PSSGM Melaka</title>
+    <title>Edit Session - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
@@ -38,12 +38,12 @@
         .time-grid .form-group { flex: 1; margin-bottom: 20px; }
 
         .btn-submit { 
-            background-color: #cc0000; color: white; border: none; padding: 14px 24px; 
+            background-color: #ff9900; color: #111; border: none; padding: 14px 24px; 
             font-size: 1em; font-weight: bold; border-radius: 6px; cursor: pointer; 
             transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; 
             width: 100%; justify-content: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-submit:hover { background-color: #aa0000; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(204,0,0,0.3); }
+        .btn-submit:hover { background-color: #e68a00; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(204,0,0,0.3); }
 
         .back-nav { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; }
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; }
@@ -58,8 +58,8 @@
         <div class="container">
             
             <div class="header-area">
-                <span class="material-icons">event</span>
-                <h2>Schedule New Class Session</h2>
+                <span class="material-icons">edit_calendar</span>
+                <h2>Edit Class Session</h2>
             </div>
 
             @if ($errors->any())
@@ -73,15 +73,16 @@
                 </div>
             @endif
 
-            <form action="{{ route('sessions.store') }}" method="POST">
+            <form action="{{ route('sessions.update', $timetable->id) }}" method="POST">
                 @csrf 
+                @method('PUT')
 
                 <div class="form-group">
                     <label for="course_ID">Select Course:</label>
                     <select id="course_ID" name="course_ID" class="form-control" required>
-                        <option value="" disabled selected>-- Select Your Assigned Course --</option>
+                        <option value="" disabled>-- Select Your Assigned Course --</option>
                         @foreach($courses as $course)
-                            <option value="{{ $course->course_ID ?? $course->id }}" {{ old('course_ID') == ($course->course_ID ?? $course->id) ? 'selected' : '' }}>
+                            <option value="{{ $course->course_ID ?? $course->id }}" {{ $timetable->course_ID == ($course->course_ID ?? $course->id) ? 'selected' : '' }}>
                                 {{ $course->course_type }} ({{ $course->course_code }})
                             </option>
                         @endforeach
@@ -91,34 +92,34 @@
                 <div class="form-group">
                     <label for="gel_ID">Select Training Location (Gelanggang):</label>
                     <select id="gel_ID" name="gel_ID" class="form-control" required>
-                        <option value="" disabled selected>-- Select Active Gelanggang --</option>
+                        <option value="" disabled>-- Select Active Gelanggang --</option>
                         @foreach($gelanggangs as $gelanggang)
-                            <option value="{{ $gelanggang->gel_ID ?? $gelanggang->id }}" {{ old('gel_ID') == ($gelanggang->gel_ID ?? $gelanggang->id) ? 'selected' : '' }}>
+                            <option value="{{ $gelanggang->gel_ID ?? $gelanggang->id }}" {{ $timetable->gel_ID == ($gelanggang->gel_ID ?? $gelanggang->id) ? 'selected' : '' }}>
                                 {{ $gelanggang->gel_name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                {{-- MASA DIPECAHKAN KEPADA DUA KOTAK --}}
+                {{-- MASA DIPECAHKAN KEPADA DUA KOTAK DENGAN DATA LAMA --}}
                 <div class="time-grid">
                     <div class="form-group">
                         <label for="start_time">Start Date & Time:</label>
-                        <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
+                        <input type="datetime-local" id="start_time" name="start_time" class="form-control" value="{{ \Carbon\Carbon::parse($timetable->start_time)->format('Y-m-d\TH:i') }}" required>
                     </div>
                     <div class="form-group">
                         <label for="end_time">End Time:</label>
-                        <input type="time" id="end_time" name="end_time" class="form-control" required>
+                        <input type="time" id="end_time" name="end_time" class="form-control" value="{{ \Carbon\Carbon::parse($timetable->end_time)->format('H:i') }}" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="capacity">Maximum Capacity (Pax):</label>
-                    <input type="number" id="capacity" name="capacity" class="form-control" min="1" placeholder="e.g., 30" required>
+                    <input type="number" id="capacity" name="capacity" class="form-control" min="1" value="{{ $timetable->capacity }}" required>
                 </div>
 
                 <button type="submit" class="btn-submit">
-                    <span class="material-icons">save</span> Create Schedule
+                    <span class="material-icons">update</span> Update Schedule
                 </button>
             </form>
 

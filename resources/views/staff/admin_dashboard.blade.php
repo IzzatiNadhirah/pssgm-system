@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Dashboard - PSSGM Melaka</title>
+    <title>Admin Dashboard - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         /* CSS Khusus untuk Page Content */
@@ -30,15 +30,15 @@
         .stats-container { display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
         
         .stat-card { 
-            flex: 1; min-width: 200px; background: #f9f9f9; padding: 25px; 
+            flex: 1; min-width: 180px; background: #f9f9f9; padding: 25px 15px; 
             border-radius: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
             border-left: 5px solid #111;
         }
         .stat-card.gold { border-left-color: #ffcc00; }
         .stat-card.red { border-left-color: #cc0000; }
         
-        .stat-card h4 { margin: 0; color: #666; text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px; }
-        .stat-card .value { font-size: 2.5em; font-weight: bold; color: #111; margin-top: 10px; display: block; }
+        .stat-card h4 { margin: 0; color: #666; text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px; }
+        .stat-card .value { font-size: 2.2em; font-weight: bold; color: #111; margin-top: 10px; display: block; }
 
         /* --- GRID MENU CARDS --- */
         .section-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; color: #111; font-size: 1.2em; }
@@ -74,24 +74,32 @@
             
             <div class="header-area">
                 <h2>HQ Overview</h2>
-                <p class="subtitle">Welcome to the master control panel, <b>{{ Auth::guard('staff')->user()->name }}</b>!</p>
+                <p class="subtitle">Welcome to the master control panel</p>
                 <div class="status-badge">
-                    <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span> Super Admin
+                    <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span> Admin
                 </div>
             </div>
 
             <div class="stats-container">
                 <div class="stat-card">
-                    <h4>Total Members</h4>
-                    <span class="value">{{ $totalMembers ?? 0 }}</span>
+                    <h4>Members</h4>
+                    <span class="value">{{ $countMembers ?? 0 }}</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Instructors</h4>
+                    <span class="value">{{ $countInstructors ?? 0 }}</span>
+                </div>
+                <div class="stat-card">
+                    <h4>Staff</h4>
+                    <span class="value">{{ $countStaffs ?? 0 }}</span>
                 </div>
                 <div class="stat-card gold">
-                    <h4>Active Gelanggang</h4>
+                    <h4>Gelanggang</h4>
                     <span class="value">{{ $totalGelanggang ?? 0 }}</span>
                 </div>
                 <div class="stat-card red">
-                    <h4>Total Fees Collected</h4>
-                    <span class="value">RM {{ number_format($totalFees ?? 0, 2) }}</span>
+                    <h4>Fees Collected (RM)</h4>
+                    <span class="value">{{ number_format($totalFees ?? 0, 2) }}</span>
                 </div>
             </div>
 

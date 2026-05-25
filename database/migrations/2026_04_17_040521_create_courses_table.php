@@ -21,6 +21,9 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            -- PADAM SEQUENCE COURSE LAMA (JIKA ADA)
+            DROP SEQUENCE IF EXISTS course_seq CASCADE;
+
             CREATE SEQUENCE course_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_course_code()
@@ -43,7 +46,7 @@ return new class extends Migration
         DB::unprepared("
             DROP TRIGGER IF EXISTS set_course_code ON course;
             DROP FUNCTION IF EXISTS generate_course_code();
-            DROP SEQUENCE IF EXISTS course_seq;
+            DROP SEQUENCE IF EXISTS course_seq CASCADE;
         ");
         Schema::dropIfExists('course');
     }

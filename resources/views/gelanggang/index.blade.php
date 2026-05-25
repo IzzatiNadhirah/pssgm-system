@@ -19,23 +19,20 @@
         .header-text h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
         .header-text p { margin: 5px 0 0 0; color: #666; font-size: 0.9em; }
         
-        /* --- STYLES UNTUK FILTER --- */
+        /* --- STYLES UNTUK KOTAK FILTER (DROPDOWN) --- */
         .filter-area { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
-        .filter-area label { font-weight: bold; color: #333; display: flex; align-items: center; gap: 5px; }
-        .filter-control { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em; min-width: 250px; outline: none; }
+        .filter-area label { font-weight: bold; color: #333; display: flex; align-items: center; gap: 5px; margin: 0; }
+        .filter-control { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em; min-width: 250px; outline: none; cursor: pointer; }
         .filter-control:focus { border-color: #cc0000; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95em; }
         th { background-color: #111; color: #ffcc00; font-weight: bold; text-transform: uppercase; font-size: 0.85em; }
-        tr:hover { background-color: #fffdf5; }
+        tr:hover { background-color: #fffdf5; transition: 0.2s; }
         
         .btn { padding: 8px 16px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
         .btn-add { background-color: #cc0000; color: white; }
-        
-        /* --- TAMBAH STYLE BUTANG EDIT --- */
         .btn-edit { background-color: #ffcc00; color: #111; padding: 6px 12px; }
-        
         .btn-delete { background-color: #333; color: white; padding: 6px 12px; }
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }
 
@@ -59,10 +56,9 @@
             <div class="header-area">
                 <div class="header-text">
                     @php
-                        $isSuperAdmin = Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'super_admin';
+                        $isSuperAdmin = Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'admin';
                         $cawanganTitle = '';
                         if (!$isSuperAdmin && $activeGelanggangs->isNotEmpty()) {
-                            // Ambil nama cawangan dari data pertama kalau dia bukan super admin
                             $cawanganTitle = ' - ' . ($activeGelanggangs->first()->cawangan->caw_name ?? '');
                         }
                     @endphp
@@ -87,7 +83,7 @@
                 <div class="empty-state">
                     <span class="material-icons" style="font-size: 48px; color: #ccc;">stadium</span>
                     <h3>No Active Gelanggang Found</h3>
-                    <p>There are no active training centers under your supervision yet. Approve pending applications to see them here.</p>
+                    <p>There are no active training centers under your supervision yet.</p>
                 </div>
             @else
                 
@@ -98,7 +94,6 @@
                             <option value="all">-- View All Cawangans --</option>
                             
                             @php
-                                // Tarik nama cawangan unik yang wujud dalam senarai gelanggang aktif ni
                                 $uniqueCawangans = $activeGelanggangs->pluck('cawangan.caw_name')->filter()->unique();
                             @endphp
 
@@ -163,9 +158,9 @@
             @endif
 
             <div class="footer-nav">
-                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'super_admin')
+                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'admin')
                     <a href="{{ route('staff.dashboard') }}" class="back-link">
-                        <span class="material-icons">arrow_back</span> Back to Super Admin Dashboard
+                        <span class="material-icons">arrow_back</span> Back to Admin Dashboard
                     </a>
                 @else
                     <a href="{{ route('staff.dashboard') }}" class="back-link">

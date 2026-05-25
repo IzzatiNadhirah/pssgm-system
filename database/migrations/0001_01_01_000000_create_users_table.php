@@ -42,6 +42,9 @@ return new class extends Migration
 
         // 4. PostgreSQL Sequence & Trigger for user_code
         DB::unprepared("
+            -- TAMBAH BARIS NI UNTUK PADAM SEQUENCE LAMA (JIKA ADA)
+            DROP SEQUENCE IF EXISTS users_seq CASCADE;
+            
             CREATE SEQUENCE users_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_user_code()

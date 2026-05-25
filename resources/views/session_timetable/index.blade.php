@@ -3,82 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrolled Students</title>
+    <title>Manage Sessions - PSSGM Melaka</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
+        .content-area { padding: 40px 20px; display: flex; justify-content: center; }
+        .container { max-width: 1200px; width: 100%; background: white; padding: 35px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; }
         
-        /* PSSGM THEME COLORS */
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #cc0000; }
-        .header-title { color: #111; margin-top: 0; border-bottom: 2px solid #ffcc00; padding-bottom: 10px; display: inline-block; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
+        h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+        th { background-color: #111; color: #ffcc00; font-weight: bold; text-transform: uppercase; font-size: 0.85em; }
+        tr:hover { background-color: #fffdf5; }
         
-        /* Black Background, Gold Text for Header */
-        th { background-color: #111; color: #ffcc00; font-weight: bold; letter-spacing: 0.5px; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        tr:hover { background-color: #f1f1f1; }
-        
-        .btn-delete { background-color: #333; color: white; border: 1px solid #111; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; }
-        .btn-delete:hover { background-color: #000; }
-        
-        .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-left: 5px solid #28a745; margin-bottom: 15px; border-radius: 4px; }
+        .btn { padding: 8px 16px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
+        .btn-add { background-color: #cc0000; color: white; }
+        .btn-edit { background-color: #ffcc00; color: #111; }
+        .btn-delete { background-color: #333; color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .alert-success { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
+
+        .empty-state { text-align: center; padding: 50px; color: #888; }
+        .empty-state p { margin-top: 10px; }
+
+        .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .back-link:hover { transform: translateX(-5px); }
     </style>
 </head>
 <body>
-    <div class="container">
-        
-        <h2 class="header-title">Enrolled Students List</h2>
-        <p style="color: #666;">View the list of students who have enrolled in your classes.</p>
 
-        @if (session('success'))
-            <div class="alert-success">
-                <b>{{ session('success') }}</b>
-            </div>
-        @endif
+    @include('layouts.navbar')
 
-        @if($timetables->isEmpty())
-            <div style="background-color: #fff9e6; padding: 40px; text-align: center; border-radius: 8px; border: 1px dashed #ffcc00; margin-top: 20px;">
-                <p style="margin-top: 0; color: #555; font-weight: bold;">No students have enrolled in your classes yet.</p>
-                <p style="font-size: 0.9em; color: #888;">Students will appear here once they register for your scheduled courses.</p>
+    <div class="content-area">
+        <div class="container">
+            
+            <div class="header-area">
+                <h2>Manage Class Sessions</h2>
+                <a href="{{ route('sessions.create') }}" class="btn btn-add">
+                    <span class="material-icons">add</span> Create New Session
+                </a>
             </div>
-        @else
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Student Details</th>
-                            <th>Course Enrolled</th>
-                            <th>Class Schedule</th>
-                            <th style="text-align: center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($timetables as $timetable)
-                        <tr>
-                            <td><b>{{ $timetable->student->name }}</b><br><small style="color: #666;">ID: {{ $timetable->student->user_code }}</small></td>
-                            <td><b>{{ $timetable->course->course_code }}</b><br><small>{{ $timetable->course->course_type }}</small></td> 
-                            
-                            <td>{{ $timetable->course->session_time ?? 'Not Set' }}</td>
-                            
-                            <td style="text-align: center;">
-                                <form action="{{ route('sessions.destroy_custom', ['course_id' => $timetable->course_ID, 'user_id' => $timetable->user_ID]) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to remove this student from the class?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-delete">Remove</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
 
-        <div style="margin-top: 30px;">
-            <a href="{{ route('instructor.dashboard') }}" style="color: #cc0000; text-decoration: none; font-weight: bold;">&larr; Back to Dashboard</a>
+            @if (session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+
+            @if($timetables->isEmpty())
+                <div class="empty-state">
+                    <span class="material-icons" style="font-size: 48px;">event_busy</span>
+                    <h3>No Sessions Created</h3>
+                    <p>You have not scheduled any sessions for your courses yet.</p>
+                </div>
+            @else
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Course Type</th>
+                                <th>Location (Gelanggang)</th>
+                                <th>Session Date & Time</th>
+                                <th>Capacity</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($timetables as $session)
+                            <tr>
+                                <td><b style="color: #111; font-size: 1.1em;">{{ $session->course->course_type ?? 'Unknown Course' }}</b></td>
+                                
+                                <td>{{ $session->gelanggang->gel_name ?? 'Location Not Set' }}</td>
+                                
+                                <td style="color: #111;">
+                                    @if($session->start_time && $session->end_time)
+                                        <div style="font-weight: bold; color: #cc0000; font-size: 1.05em;">
+                                            {{ \Carbon\Carbon::parse($session->start_time)->format('d M Y') }}
+                                        </div>
+                                        <div style="color: #555; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                            <span class="material-icons" style="font-size: 14px;">schedule</span>
+                                            {{ \Carbon\Carbon::parse($session->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($session->end_time)->format('h:i A') }}
+                                        </div>
+                                    @else
+                                        <span style="color: #cc0000; font-style: italic;">Masa belum ditetapkan</span>
+                                    @endif
+                                </td>
+                                
+                                <td>{{ $session->capacity }} Pax</td>
+                                
+                                <td style="text-align: center;">
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        
+                                        <a href="{{ route('sessions.edit', $session->id) }}" class="btn btn-edit" title="Edit Session">
+                                            <span class="material-icons" style="font-size: 18px;">edit</span>
+                                        </a>
+
+                                        <form action="{{ route('sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this session?');" style="margin:0;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-delete" title="Delete Session">
+                                                <span class="material-icons" style="font-size: 18px;">delete</span>
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            <div class="footer-nav">
+                <a href="{{ route('courses.index') }}" class="back-link">
+                    <span class="material-icons">arrow_back</span> Back to My Courses
+                </a>
+            </div>
+
         </div>
-
     </div>
 </body>
 </html>

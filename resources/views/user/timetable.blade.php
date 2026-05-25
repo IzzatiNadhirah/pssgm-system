@@ -82,6 +82,10 @@
                         </thead>
                         <tbody>
                             @foreach($enrollments as $enrollment)
+                                @php
+                                    // PENTING: Tarik data dari SessionTimetable untuk kursus ini
+                                    $sesi = \App\Models\SessionTimetable::with('gelanggang')->where('course_ID', $enrollment->course_ID)->first();
+                                @endphp
                                 <tr>
                                     <td style="font-size: 0.9em; color: #666;">
                                         {{ \Carbon\Carbon::parse($enrollment->enroll_date)->format('d M Y') }}
@@ -89,10 +93,20 @@
                                     <td><b>{{ $enrollment->course->course_type ?? 'N/A' }}</b></td>
                                     <td>{{ $enrollment->course->instructor->name ?? 'TBA' }}</td>
                                     <td>
-                                        <span class="status-badge">{{ $enrollment->course->gelanggang->gel_name ?? 'TBA' }}</span>
+                                        <span class="status-badge">{{ $sesi->gelanggang->gel_name ?? 'TBA' }}</span>
                                     </td>
                                     <td style="color: #111;">
-                                        <b>{{ $enrollment->course->session_time ?? 'TBA' }}</b>
+                                        @if($sesi && $sesi->start_time && $sesi->end_time)
+                                            <div style="font-weight: bold; color: #cc0000; font-size: 1.05em;">
+                                                {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M Y') }}
+                                            </div>
+                                            <div style="color: #555; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                                <span class="material-icons" style="font-size: 14px;">schedule</span>
+                                                {{ \Carbon\Carbon::parse($sesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($sesi->end_time)->format('h:i A') }}
+                                            </div>
+                                        @else
+                                            <b>TBA</b>
+                                        @endif
                                     </td>
                                     <td style="text-align: center;">
                                         <form action="{{ route('enroll.destroy', $enrollment->enroll_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to drop this class? This action cannot be undone.');">

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Staff - PSSGM Melaka</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -42,17 +43,28 @@
             font-weight: 800;
         }
 
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        /* Tetingkap Mesej Berjaya */
+        .alert-success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            padding: 15px; 
+            border-left: 5px solid #28a745; 
+            margin-bottom: 25px; 
+            border-radius: 6px; 
             font-size: 14px;
             text-align: left;
         }
+
+        /* Tetingkap Mesej Ralat */
         .alert-error {
             background-color: #f8d7da;
             color: #721c24;
+            padding: 15px;
             border-left: 5px solid #cc0000;
+            margin-bottom: 25px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: left;
         }
 
         .form-group {
@@ -129,8 +141,15 @@
         <h2>Register New Staff</h2>
         <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Administrative Access Registration</p>
 
+        @if (session('success'))
+            <script>alert("{{ session('success') }}");</script>
+            <div class="alert-success">
+                <b>Berjaya!</b> {{ session('success') }}
+            </div>
+        @endif
+
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert-error">
                 <ul style="margin: 0; padding-left: 15px;">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -154,7 +173,12 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="password" name="password" required placeholder="••••••••" style="padding-right: 40px;">
+                    <span id="togglePasswordIcon" class="material-icons" onclick="togglePassword('password', 'togglePasswordIcon')" style="position: absolute; right: 10px; cursor: pointer; color: #666; user-select: none;">
+                        visibility_off
+                    </span>
+                </div>
             </div>
 
             <button type="submit" class="btn-register">Register Staff</button>
@@ -165,5 +189,21 @@
         </div>
     </div>
 
+    <script>
+        function togglePassword(inputId, iconId) {
+            var pwdInput = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            
+            if (pwdInput.type === "password") {
+                pwdInput.type = "text";
+                icon.textContent = "visibility";
+                icon.style.color = "#cc0000"; 
+            } else {
+                pwdInput.type = "password";
+                icon.textContent = "visibility_off";
+                icon.style.color = "#666"; 
+            }
+        }
+    </script>
 </body>
 </html>

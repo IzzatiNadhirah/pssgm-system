@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Instructor;
-use App\Models\Gelanggang; // Wajib tambah ni untuk tarik data Gelanggang
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +16,12 @@ class CourseController extends Controller
         if (Auth::guard('instructor')->check()) {
             $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
             
-            // Tarik sekali data Gelanggang & Instructor supaya tak error kat jadual
-            $courses = Course::with(['instructor', 'gelanggang'])->where('instructor_ID', $instructorId)->get();
+            // Tarik sekali data Instructor supaya tak error
+            $courses = Course::with(['instructor'])->where('instructor_ID', $instructorId)->get();
         } 
         // Jika Staff (Admin) atau Super Admin yang login, tunjuk semua kursus
         else {
-            $courses = Course::with(['instructor', 'gelanggang'])->get();
+            $courses = Course::with(['instructor'])->get();
         }
         
         return view('course.index', compact('courses'));
@@ -106,53 +105,6 @@ class CourseController extends Controller
     }
 
     // ==========================================
-    // FUNGSI UNTUK INSTRUCTOR SET JADUAL
-    // ==========================================
-
-    public function editSchedule($id)
-    {
-        $course = Course::findOrFail($id);
-        $instructor = Auth::guard('instructor')->user();
-        
-        // Halang instructor lain atau staff dari ubah jadual yang bukan hak dia
-        if (!Auth::guard('instructor')->check() || $course->instructor_ID != ($instructor->instructor_ID ?? $instructor->id)) {
-            abort(403, 'Unauthorized action. You do not have permission to edit this schedule.');
-        }
-
-        // Cari SEMUA gelanggang yang Instructor ni ajar (dan yang dah di-approve oleh HQ)
-        $gelanggangs = Gelanggang::where('instructor_ID', $course->instructor_ID)
-                                 ->where('status', 'approved')
-                                 ->get();
-
-        return view('course.schedule', compact('course', 'gelanggangs'));
-    }
-
-    public function updateSchedule(Request $request, $id)
-    {
-        $request->validate([
-            'start_time' => 'required',
-            'end_time' => 'required',
-            'gel_ID' => 'required',
-            'capacity' => 'required|integer|min:1',
-        ]);
-
-        $course = Course::findOrFail($id);
-        
-        // Formatkan masa menggunakan fungsi bawaan Laravel (Carbon)
-        $start = \Carbon\Carbon::parse($request->start_time)->format('d M Y, h:i A');
-        $end = \Carbon\Carbon::parse($request->end_time)->format('h:i A');
-        $gabungan_masa = $start . ' - ' . $end;
-
-        $course->update([
-            'session_time' => $gabungan_masa,
-            'capacity' => $request->capacity,
-            'gel_ID' => $request->gel_ID,
-        ]);
-
-        return redirect()->route('courses.index')->with('success', 'Class schedule updated successfully!');
-    }
-
-    // ==========================================
     // FUNGSI UNTUK LIHAT SENARAI PELAJAR
     // ==========================================
     public function enrolledStudents()
@@ -160,7 +112,8 @@ class CourseController extends Controller
         $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
         
         // Tarik kursus milik instructor ni, dan tarik sekali data pendaftaran (enrollments) berserta data User (pelajar)
-        $courses = Course::with(['gelanggang', 'enrollments.user']) 
+        // NOTA: 'gelanggang' telah dibuang dari 'with()' kerana ia tiada lagi dalam jadual courses
+        $courses = Course::with(['enrollments.user']) 
                          ->where('instructor_ID', $instructorId)
                          ->get();
 

@@ -27,15 +27,16 @@ class StaffController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        // 2. Create the new staff member (ID is handled by your PostgreSQL trigger)
+        // 2. Create the new staff member
         Staff::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Encrypts the password
+            'password' => Hash::make($request->password), 
+            'role' => 'staff',
         ]);
 
         // 3. Redirect back to the form with a success message
-        return redirect()->route('staff.create')->with('success', 'Staff registered successfully!');
+        return redirect()->route('staffs.create')->with('success', 'Staff registered successfully!');
     }
 
     public function show(Staff $staff)

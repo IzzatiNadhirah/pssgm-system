@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Cawangan;
 use App\Models\Staff;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CawanganController extends Controller
 {
+    // Fungsi __construct() dengan middleware() tu kita dah BUANG SEPENUHNYA
+    // Perlindungan dah diuruskan dalam fail routes/web.php
+
     public function index()
     {
         // Fetch all branches
@@ -22,9 +26,9 @@ class CawanganController extends Controller
                                     ->pluck('staff_ID')
                                     ->toArray();
 
-        // 2. Tarik senarai staff yang 'free' SAHAJA dan pastikan BUKAN super_admin
+        // 2. Tarik senarai staff yang 'free' SAHAJA dan pastikan BUKAN 'admin' (bukan lagi 'super_admin')
         $staffs = Staff::whereNotIn('staff_ID', $assignedStaffIds)
-                       ->where('role', '!=', 'super_admin')
+                       ->where('role', '!=', 'admin') // DITUKAR KE 'admin'
                        ->get(); 
         
         return view('cawangan.create', compact('staffs'));
@@ -55,26 +59,24 @@ class CawanganController extends Controller
         //
     }
 
-    // UPDATED: Fetch the specific record and load the edit view with FILTERED staff
     public function edit($id)
     {
         $cawangan = Cawangan::findOrFail($id);
         
-        // 1. Cari ID staff yang dah pegang cawangan LAIN (Kecuali cawangan yang kita tengah edit ni)
+        // 1. Cari ID staff yang dah pegang cawangan LAIN 
         $assignedStaffIds = Cawangan::whereNotNull('staff_ID')
                                     ->where('caw_ID', '!=', $id)
                                     ->pluck('staff_ID')
                                     ->toArray();
 
-        // 2. Tarik senarai staff yang 'free' + staff yang memang tengah jaga cawangan ni, BUKAN super_admin
+        // 2. Tarik senarai staff yang 'free', BUKAN 'admin' (DITUKAR)
         $staffs = Staff::whereNotIn('staff_ID', $assignedStaffIds)
-                       ->where('role', '!=', 'super_admin')
+                       ->where('role', '!=', 'admin') // DITUKAR KE 'admin'
                        ->get(); 
         
         return view('cawangan.edit', compact('cawangan', 'staffs'));
     }
 
-    // UPDATED: Process the edited form data and save to database
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -96,7 +98,6 @@ class CawanganController extends Controller
 
     public function destroy($id)
     {
-        // Find the specific branch by its custom primary key and delete it
         $cawangan = Cawangan::findOrFail($id);
         $cawangan->delete();
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\Course;
+use App\Models\SessionTimetable; // PENTING: Import Model baru ni
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,9 +22,11 @@ class EnrollmentController extends Controller
         // Fetch course data
         $course = Course::findOrFail($course_id);
 
-        // 2. SAFETY LOCK: Ensure course details are complete
-        // DIBETULKAN: Tukar gelanggang_ID kepada gel_ID
-        if (empty($course->instructor_ID) || empty($course->gel_ID) || empty($course->session_time)) {
+        // 2. SAFETY LOCK: Check if there is an active session in SessionTimetable
+        // Kita cari kalau kursus ni dah ada sesi berjadual (Masa & Tempat)
+        $session = SessionTimetable::where('course_ID', $course_id)->first();
+
+        if (empty($course->instructor_ID) || empty($session)) {
             return redirect()->back()->with('error', 'Enrollment blocked! This course does not have a complete schedule or assigned instructor yet.');
         }
 
@@ -36,10 +39,10 @@ class EnrollmentController extends Controller
             return redirect()->back()->with('error', 'You are already enrolled in this course.');
         }
 
-        // 4. Check class capacity
+        // 4. Check class capacity (Guna kapasiti dari SessionTimetable)
         $currentEnrolled = Enrollment::where('course_ID', $course_id)->count();
         
-        if ($course->capacity && $currentEnrolled >= $course->capacity) {
+        if ($session->capacity && $currentEnrolled >= $session->capacity) {
             return redirect()->back()->with('error', 'Sorry, this class is already full!');
         }
 
@@ -57,6 +60,7 @@ class EnrollmentController extends Controller
     {
         $user = Auth::user();
 
+        // Di sini kita tarik hubungan melalui course ke gelanggang dan sesi
         $enrollments = Enrollment::with(['course.instructor', 'course.gelanggang'])
                                  ->where('user_ID', $user->user_ID)
                                  ->orderBy('created_at', 'desc')

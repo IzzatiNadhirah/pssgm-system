@@ -63,14 +63,11 @@
                                 {{ $course->course_type }}
                             </div>
                             <span style="font-size: 0.85em; background: #333; padding: 4px 10px; border-radius: 12px; color: white;">
-                                {{ $course->enrollments ? $course->enrollments->count() : 0 }} / {{ $course->capacity ?? '?' }} Pax
+                                Total Enrolled: {{ $course->enrollments ? $course->enrollments->count() : 0 }} 
                             </span>
                         </div>
 
-                        <div class="course-info">
-                            <span><i class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">place</i> Location:</span> {{ $course->gelanggang->gel_name ?? 'Not Set' }} <br>
-                            <span style="margin-top: 5px; display: inline-block;"><i class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">schedule</i> Time:</span> {{ $course->session_time ?? 'Not Scheduled' }}
-                        </div>
+                        {{-- Info lokasi dan masa dibuang kerana ia kini bergantung pada SessionTimetable yang berasingan --}}
 
                         @if(!$course->enrollments || $course->enrollments->isEmpty())
                             <div class="empty-state">No students have enrolled in this class yet.</div>
@@ -91,7 +88,8 @@
                                             <td>{{ $index + 1 }}</td>
                                             <td><b>{{ $enrollment->user->name ?? 'Unknown Student' }}</b></td>
                                             
-                                            <td>{{ \Carbon\Carbon::parse($enrollment->enroll_date)->format('d M Y') }}</td>
+                                            {{--  Pastikan nama kolum database tepat. Biasanya 'created_at' digunakan oleh default Laravel --}}
+                                            <td>{{ \Carbon\Carbon::parse($enrollment->created_at ?? $enrollment->enroll_date)->format('d M Y') }}</td>
                                             
                                             <td><b style="color: #28a745;">Active</b></td>
                                         </tr>

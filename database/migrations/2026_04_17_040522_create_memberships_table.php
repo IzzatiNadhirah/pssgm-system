@@ -21,6 +21,8 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            DROP SEQUENCE IF EXISTS membership_seq CASCADE;
+
             CREATE SEQUENCE membership_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_membership_code()

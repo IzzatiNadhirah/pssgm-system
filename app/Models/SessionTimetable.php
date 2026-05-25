@@ -9,24 +9,22 @@ class SessionTimetable extends Model
 {
     use HasFactory;
 
-    // 1. Kenal pasti nama table
     protected $table = 'session_timetable';
 
-    // 2. Disable default auto-increment sebab table ni guna composite primary key
-    public $incrementing = false;
-    protected $primaryKey = null;
-
-    protected $fillable = [
-        'course_ID',
-        'user_ID',
-        'session_time',
-        'capacity',
-    ];
+    // KITA BUANG $fillable DAN GANTI DENGAN $guarded
+    // Maksudnya: "Jangan halang apa-apa data, benarkan semua masuk!"
+    protected $guarded = [];
 
     // Hubungan dengan Course
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_ID', 'course_ID');
+    }
+
+    // Hubungan dengan Gelanggang
+    public function gelanggang()
+    {
+        return $this->belongsTo(Gelanggang::class, 'gel_ID', 'gel_ID');
     }
 
     // Hubungan dengan User (Pelajar)

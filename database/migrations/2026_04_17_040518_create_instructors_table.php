@@ -21,6 +21,9 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            -- PADAM SEQUENCE INSTRUCTOR LAMA (JIKA ADA)
+            DROP SEQUENCE IF EXISTS instructor_seq CASCADE;
+
             CREATE SEQUENCE instructor_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_instructor_code()
@@ -43,7 +46,7 @@ return new class extends Migration
         DB::unprepared("
             DROP TRIGGER IF EXISTS set_instructor_code ON instructor;
             DROP FUNCTION IF EXISTS generate_instructor_code();
-            DROP SEQUENCE IF EXISTS instructor_seq;
+            DROP SEQUENCE IF EXISTS instructor_seq CASCADE;
         ");
         Schema::dropIfExists('instructor');
     }

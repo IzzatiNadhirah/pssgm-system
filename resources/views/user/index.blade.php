@@ -83,7 +83,7 @@
                     <p>Manage all registered members and administrative staff in the system.</p>
                 </div>
                 
-                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'super_admin')
+                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'admin')
                     <a href="{{ route('users.create') }}" class="btn btn-add">
                         <span class="material-icons">person_add</span> Register New User
                     </a>
@@ -171,24 +171,25 @@
                         </thead>
                         <tbody>
                             @foreach($staffs as $staff)
-                            <tr>
+                            <tr style="{{ $staff->role === 'admin' ? 'background-color: #fdf5f6;' : '' }}">
                                 <td><b>{{ $staff->staff_ID }}</b></td>
                                 <td>{{ $staff->name }}</td>
                                 <td>{{ $staff->email }}</td>
                                 <td>{{ \Carbon\Carbon::parse($staff->created_at)->format('d M Y') }}</td>
                                 <td>
-                                    @if($staff->role === 'super_admin')
-                                        <span class="badge-role badge-admin">Super Admin</span>
+                                    @if($staff->role === 'admin')
+                                        <span class="badge-role badge-admin">Admin</span>
                                     @else
                                         <span class="badge-role badge-staff">System Staff</span>
                                     @endif
                                 </td>
                                 <td style="display: flex; gap: 8px; justify-content: center; align-items: center;">
-                                    <a href="{{ route('staffs.edit', $staff->staff_ID) }}" class="btn btn-edit" title="Edit Staff">
-                                        <span class="material-icons" style="font-size: 18px;">edit</span>
-                                    </a>
+                                    
+                                    @if($staff->role !== 'admin')
+                                        <a href="{{ route('staffs.edit', $staff->staff_ID) }}" class="btn btn-edit" title="Edit Staff">
+                                            <span class="material-icons" style="font-size: 18px;">edit</span>
+                                        </a>
 
-                                    @if($staff->role !== 'super_admin')
                                         <form action="{{ route('staffs.destroy', $staff->staff_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this staff member?');" style="margin: 0; display: inline;">
                                             @csrf
                                             @method('DELETE')
@@ -196,7 +197,10 @@
                                                 <span class="material-icons" style="font-size: 18px;">delete</span>
                                             </button>
                                         </form>
+                                    @else
+                                        <span style="color: #999; font-style: italic; font-size: 0.85em;">Restricted</span>
                                     @endif
+
                                 </td>
                             </tr>
                             @endforeach
@@ -206,9 +210,9 @@
             @endif
 
             <div class="footer-nav">
-                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'super_admin')
+                @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'admin')
                     <a href="{{ route('staff.dashboard') }}" class="back-link">
-                        <span class="material-icons">arrow_back</span> Back to Super Admin Dashboard
+                        <span class="material-icons">arrow_back</span> Back to Admin Dashboard
                     </a>
                 @else
                     <a href="{{ route('staff.dashboard') }}" class="back-link">

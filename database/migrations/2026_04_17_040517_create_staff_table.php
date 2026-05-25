@@ -19,12 +19,16 @@ return new class extends Migration
         });
 
         DB::unprepared("
+            -- PADAM SEQUENCE STAFF LAMA (JIKA ADA)
+            DROP SEQUENCE IF EXISTS staff_seq CASCADE;
+            
             CREATE SEQUENCE staff_seq START 1;
 
             CREATE OR REPLACE FUNCTION generate_staff_code()
             RETURNS TRIGGER AS $$
             BEGIN
-                NEW.staff_code := 'ST' || LPAD(nextval('staff_seq')::text, 4, '0');
+                -- KITA GUNA PREFIX 'STF' UNTUK STAFF
+                NEW.staff_code := 'STF' || LPAD(nextval('staff_seq')::text, 4, '0');
                 RETURN NEW;
             END;
             $$ LANGUAGE plpgsql;
@@ -41,7 +45,7 @@ return new class extends Migration
         DB::unprepared("
             DROP TRIGGER IF EXISTS set_staff_code ON staff;
             DROP FUNCTION IF EXISTS generate_staff_code();
-            DROP SEQUENCE IF EXISTS staff_seq;
+            DROP SEQUENCE IF EXISTS staff_seq CASCADE;
         ");
         Schema::dropIfExists('staff');
     }
