@@ -89,9 +89,9 @@
                 
                 @if($isSuperAdmin)
                     <div class="filter-area">
-                        <label for="cawanganFilter"><span class="material-icons">filter_alt</span> Filter by Cawangan:</label>
+                        <label for="cawanganFilter"><span class="material-icons">filter_alt</span> Filter by Branch:</label>
                         <select id="cawanganFilter" class="filter-control">
-                            <option value="all">-- View All Cawangans --</option>
+                            <option value="all">-- View All Branches --</option>
                             
                             @php
                                 $uniqueCawangans = $activeGelanggangs->pluck('cawangan.caw_name')->filter()->unique();

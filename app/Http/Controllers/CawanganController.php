@@ -14,8 +14,11 @@ class CawanganController extends Controller
 
     public function index()
     {
-        // Fetch all branches
-        $cawangans = Cawangan::all();
+        // Fetch all branches with staff name using LEFT JOIN (Table name 'cawangan' tanpa 's')
+        $cawangans = Cawangan::leftJoin('staff', 'cawangan.staff_ID', '=', 'staff.staff_ID')
+            ->select('cawangan.*', 'staff.name as staff_name')
+            ->get();
+            
         return view('cawangan.index', compact('cawangans'));
     }
 

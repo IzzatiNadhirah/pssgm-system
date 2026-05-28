@@ -139,8 +139,8 @@
     <div class="login-card">
         <img src="{{ asset('images/logo_gayong.png') }}" alt="PSSGM Logo" class="logo">
         
-        <h2>System Login</h2>
-        <p class="welcome-msg">Welcome to PSSGM Melaka Management System</p>
+        <h2>Pertubuhan Silat Seni Gayong Malaysia Negeri Melaka </h2>
+        <p class="welcome-msg">Login Page</p>
 
         @if ($errors->any())
             <div class="error-box">
@@ -174,9 +174,7 @@
         
         <div class="register-links">
             Don't have an account? <br>
-            <a href="{{ route('users.create') }}">Member Registration</a> | 
-            <a href="{{ route('staffs.create') }}">Staff</a> | 
-            <a href="{{ route('instructors.create') }}">Instructor</a>
+            <a href="{{ route('users.create') }}">Member Registration</a>
         </div>
     </div>
 

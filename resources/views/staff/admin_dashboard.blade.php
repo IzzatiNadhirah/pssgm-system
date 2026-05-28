@@ -53,16 +53,34 @@
             height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
         }
         .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); border-bottom-color: #ffcc00; }
-        
-        /* KAD ALERT (Merah Terang untuk benda Pending) */
-        .card.alert-card { background: #cc0000; border-bottom-color: #111; }
-        .card.alert-card:hover { background: #aa0000; border-bottom-color: #ffcc00; }
-        .card.alert-card .material-icons { color: white; }
-        .card.alert-card p { color: #f8d7da; }
 
         .card .material-icons { font-size: 42px; color: #ffcc00; margin-bottom: 15px; }
         .card h3 { margin: 0 0 10px 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
         .card p { margin: 0; font-size: 0.85em; color: #ccc; line-height: 1.4; }
+
+        /* --- NOTIFICATION BADGE STYLE --- */
+        .icon-wrapper { position: relative; display: inline-block; }
+        .notif-dot {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: #cc0000; /* Merah PSSGM */
+            color: white;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 20px;
+            border: 3px solid #111; /* Sempadan hitam supaya blend dengan background kad */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite; /* Tambah efek denyut sikit bagi gempak */
+        }
+
+        /* Animasi denyutan merah */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(204, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0); }
+        }
     </style>
 </head>
 <body>
@@ -107,9 +125,22 @@
 
             <div class="grid-container">
 
+                {{-- KIRA JUMLAH GELANGGANG PENDING --}}
+                @php
+                    // PENTING: Pastikan kolum status tu betul ejaannya ('pending')
+                    $pendingCount = \App\Models\Gelanggang::where('status', 'pending')->count();
+                @endphp
+
                 <a href="{{ route('gelanggangs.pending') ?? '#' }}" class="card-link">
-                    <div class="card alert-card">
-                        <span class="material-icons">notification_important</span>
+                    {{-- Dah buang kelas 'alert-card', sekarang kotak ni hitam macam biasa --}}
+                    <div class="card">
+                        <div class="icon-wrapper">
+                            <span class="material-icons">notification_important</span>
+                            {{-- Titik merah cuma keluar kalau ada benda pending --}}
+                            @if($pendingCount > 0)
+                                <span class="notif-dot">{{ $pendingCount }}</span>
+                            @endif
+                        </div>
                         <h3>Pending Approvals</h3>
                         <p>Review and approve new Gelanggang registrations.</p>
                     </div>

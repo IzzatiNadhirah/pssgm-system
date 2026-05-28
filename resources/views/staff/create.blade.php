@@ -131,6 +131,15 @@
             color: #cc0000;
             text-decoration: none;
             font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+        
+        .footer-link a:hover {
+            transform: translateX(-3px);
+            color: #111;
         }
     </style>
 </head>
@@ -184,8 +193,12 @@
             <button type="submit" class="btn-register">Register Staff</button>
         </form>
 
+        {{-- Butang Back digantikan untuk Admin --}}
         <div class="footer-link">
-            Already have an account? <a href="{{ route('login') }}">Sign In</a>
+            <a href="{{ route('users.index') }}">
+                <span class="material-icons" style="font-size: 16px;">arrow_back</span> 
+                Back to Users Directory
+            </a>
         </div>
     </div>
 

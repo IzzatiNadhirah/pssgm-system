@@ -57,6 +57,9 @@
         .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .back-link:hover { transform: translateX(-5px); color: #111; }
+        
+        /* Tambahan style untuk label staff unassigned */
+        .badge-unassigned { background-color: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -67,9 +70,9 @@
         <div class="container">
             
             <div class="header-area">
-                <h2>Manage Cawangan (Branches)</h2>
+                <h2>Manage Branches</h2>
                 <a href="{{ route('cawangans.create') }}" class="btn btn-add">
-                    <span class="material-icons">add</span> Register New Cawangan
+                    <span class="material-icons">add</span> Register New Branch
                 </a>
             </div>
 
@@ -83,7 +86,7 @@
             @if($cawangans->isEmpty())
                 <div class="empty-state">
                     <span class="material-icons" style="font-size: 48px; color: #ccc;">domain_disabled</span>
-                    <h3>No Cawangan Registered Yet</h3>
+                    <h3>No Branch Registered Yet</h3>
                     <p>Click the button above to register a new branch.</p>
                 </div>
             @else
@@ -92,6 +95,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Assigned Staff</th>
                                 <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
@@ -99,6 +103,16 @@
                             @foreach($cawangans as $caw)
                             <tr>
                                 <td><b>{{ $caw->caw_name }}</b></td>
+                                
+                                {{-- 2. PAPAR NAMA STAFF (IKON DIBUANG) --}}
+                                <td>
+                                    @if($caw->staff_name)
+                                        {{ $caw->staff_name }}
+                                    @else
+                                        <span class="badge-unassigned">Unassigned</span>
+                                    @endif
+                                </td>
+
                                 <td style="display: flex; gap: 8px; justify-content: center;">
                                     
                                     <a href="{{ route('cawangans.edit', $caw->caw_ID) }}" class="btn btn-edit" title="Edit Cawangan">

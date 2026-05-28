@@ -219,9 +219,12 @@
             <button type="submit" class="btn-register">Register Member</button>
         </form>
 
-        <div class="footer-link">
-            Already have an account? <a href="{{ route('login') }}">Sign In</a>
-        </div>
+        {{-- SEMAKAN: Hanya tunjuk kalau BUKAN admin/staff yang tengah login --}}
+        @if(!Auth::guard('staff')->check())
+            <div class="footer-link">
+                Already have an account? <a href="{{ route('login') }}">Sign In</a>
+            </div>
+        @endif
     </div>
 
     <script>

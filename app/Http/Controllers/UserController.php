@@ -3,22 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Staff; // WAJIB TAMBAH NI supaya controller kenal table staff
+use App\Models\Staff; 
+use App\Models\Instructor; // KENA TAMBAH NI supaya sistem kenal table instructor
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
     public function index()
     {
-        // 1. Ambil semua data ahli biasa (tukarkan nama $users ke $members supaya match dengan blade)
+        // PENGHADANG KESELAMATAN: Pastikan hanya Admin yang boleh masuk
+        // Kita letak awal-awal sebelum dia panggil data dari database
+        if (Auth::guard('staff')->check() && strtolower(Auth::guard('staff')->user()->role) !== 'admin') {
+            return redirect()->route('staff.dashboard')->with('error', 'Akses Dihalang! Hanya Super Admin dibenarkan masuk ke Direktori Pengguna.');
+        }
+
+        // 1. Ambil semua data ahli biasa 
         $members = User::with('membership')->orderBy('user_ID', 'asc')->get();
         
         // 2. Ambil semua data staf pengurusan
         $staffs = Staff::orderBy('staff_ID', 'asc')->get();
         
-        // 3. Hantar kedua-dua data ke paparan senarai pengurusan user
-        return view('user.index', compact('members', 'staffs'));
+        // 3. Ambil semua data jurulatih
+        $instructors = Instructor::orderBy('instructor_ID', 'asc')->get();
+        
+        // 4. Hantar semua data ke paparan
+        return view('user.index', compact('members', 'staffs', 'instructors'));
     }
 
     public function create()

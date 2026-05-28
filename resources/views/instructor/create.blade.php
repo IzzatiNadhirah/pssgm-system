@@ -134,14 +134,25 @@
 
         .footer-link {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 13px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
         }
 
         .footer-link a {
             color: #cc0000;
             text-decoration: none;
             font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+        
+        .footer-link a:hover {
+            transform: translateX(-3px);
+            color: #111;
         }
 
         @media (max-width: 650px) {
@@ -167,7 +178,7 @@
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert-error">
                 <ul style="margin: 0; padding-left: 20px;">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -215,8 +226,12 @@
             <button type="submit" class="btn-register">Register Instructor</button>
         </form>
 
+        {{-- Butang Back digantikan untuk Admin --}}
         <div class="footer-link">
-            Already have an account? <a href="{{ route('login') }}">Sign In</a>
+            <a href="{{ route('users.index') }}">
+                <span class="material-icons" style="font-size: 16px;">arrow_back</span> 
+                Back to Users Directory
+            </a>
         </div>
     </div>
 
