@@ -19,11 +19,9 @@
         h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
         th { background-color: #111; color: #ffcc00; font-weight: bold; text-transform: uppercase; font-size: 0.85em; }
         tr:hover { background-color: #fffdf5; }
-
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; background: #eee; }
         
         .empty-state { text-align: center; padding: 50px; color: #888; background: #f9f9f9; border-radius: 8px; border: 2px dashed #ddd; }
         .empty-state .material-icons { font-size: 48px; margin-bottom: 10px; color: #ccc; }
@@ -31,8 +29,8 @@
         .btn-join-now { background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 15px; transition: 0.2s; }
         .btn-join-now:hover { background: #218838; transform: translateY(-2px); }
 
-        .btn-drop { background-color: #cc0000; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
-        .btn-drop:hover { background-color: #aa0000; transform: translateY(-2px); }
+        .btn-unenroll { background-color: #cc0000; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
+        .btn-unenroll:hover { background-color: #aa0000; transform: translateY(-2px); }
 
         .alert-success { background: #d4edda; color: #155724; padding: 15px; border-left: 5px solid #28a745; margin-bottom: 20px; border-radius: 4px; font-weight: bold; }
 
@@ -83,18 +81,24 @@
                         <tbody>
                             @foreach($enrollments as $enrollment)
                                 @php
-                                    // PENTING: Tarik data dari SessionTimetable untuk kursus ini
+                                    // Fetch SessionTimetable data for this course
                                     $sesi = \App\Models\SessionTimetable::with('gelanggang')->where('course_ID', $enrollment->course_ID)->first();
                                 @endphp
                                 <tr>
                                     <td style="font-size: 0.9em; color: #666;">
                                         {{ \Carbon\Carbon::parse($enrollment->enroll_date)->format('d M Y') }}
                                     </td>
-                                    <td><b>{{ $enrollment->course->course_type ?? 'N/A' }}</b></td>
+                                    <td><b style="color: #111;">{{ $enrollment->course->course_type ?? 'N/A' }}</b></td>
                                     <td>{{ $enrollment->course->instructor->name ?? 'TBA' }}</td>
+                                    
                                     <td>
-                                        <span class="status-badge">{{ $sesi->gelanggang->gel_name ?? 'TBA' }}</span>
+                                        @if($sesi && $sesi->gelanggang)
+                                            {{ $sesi->gelanggang->gel_name }}
+                                        @else
+                                            <span style="color: #888; font-style: italic;">TBA</span>
+                                        @endif
                                     </td>
+
                                     <td style="color: #111;">
                                         @if($sesi && $sesi->start_time && $sesi->end_time)
                                             <div style="font-weight: bold; color: #cc0000; font-size: 1.05em;">
@@ -105,15 +109,15 @@
                                                 {{ \Carbon\Carbon::parse($sesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($sesi->end_time)->format('h:i A') }}
                                             </div>
                                         @else
-                                            <b>TBA</b>
+                                            <span style="color: #888; font-style: italic;">TBA</span>
                                         @endif
                                     </td>
                                     <td style="text-align: center;">
-                                        <form action="{{ route('enroll.destroy', $enrollment->enroll_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to drop this class? This action cannot be undone.');">
+                                        <form action="{{ route('enroll.destroy', $enrollment->enroll_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to unenroll from this class? This action cannot be undone.');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn-drop">
-                                                <span class="material-icons" style="font-size: 16px;">logout</span> Drop
+                                            <button type="submit" class="btn-unenroll">
+                                                <span class="material-icons" style="font-size: 16px;">logout</span> Unenroll
                                             </button>
                                         </form>
                                     </td>
