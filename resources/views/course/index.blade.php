@@ -93,7 +93,8 @@
                 </div>
             @else
                 
-                {{-- --- ADDITIONAL FILTER BAR (REDUCED TO 2 DROPDOWNS) --- --}}
+                {{-- KOTAK FILTER HANYA DITUNJUKKAN JIKA BUKAN INSTRUCTOR --}}
+                @if(!Auth::guard('instructor')->check())
                 <div class="filter-bar">
                     <div class="filter-box">
                         <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">category</span> Filter Course Type</label>
@@ -108,6 +109,7 @@
                         </select>
                     </div>
                 </div>
+                @endif
 
                 <div style="overflow-x: auto;">
                     <table class="dataTable">
@@ -286,36 +288,39 @@
                 "order": [] // Disable auto-sort on initial load
             });
 
-            // Calculate Dynamic Indices because columns shift if Instructor is logged in
             var isInstructor = {{ Auth::guard('instructor')->check() ? 'true' : 'false' }};
-            var branchColIndex = isInstructor ? 1 : 2;
+            
+            // JALANKAN FUNGSI FILTER HANYA JIKA BUKAN INSTRUCTOR
+            if (!isInstructor) {
+                var branchColIndex = 2; // Index kolum cawangan untuk staff/member
 
-            // 1. Extract course types (Column 0) and populate Dropdown
-            table.column(0).data().unique().sort().each(function (d, j) {
-                var val = $('<div>' + d + '</div>').text().trim();
-                if(val) {
-                    $('#filter-course').append('<option value="' + val + '">' + val + '</option>');
-                }
-            });
+                // 1. Extract course types (Column 0) and populate Dropdown
+                table.column(0).data().unique().sort().each(function (d, j) {
+                    var val = $('<div>' + d + '</div>').text().trim();
+                    if(val) {
+                        $('#filter-course').append('<option value="' + val + '">' + val + '</option>');
+                    }
+                });
 
-            // 2. Extract branches (Branch Column) and populate Dropdown
-            table.column(branchColIndex).data().unique().sort().each(function (d, j) {
-                var val = $('<div>' + d + '</div>').text().trim();
-                if(val && val !== 'TBA') {
-                    $('#filter-branch').append('<option value="' + val + '">' + val + '</option>');
-                }
-            });
+                // 2. Extract branches (Branch Column) and populate Dropdown
+                table.column(branchColIndex).data().unique().sort().each(function (d, j) {
+                    var val = $('<div>' + d + '</div>').text().trim();
+                    if(val && val !== 'TBA') {
+                        $('#filter-branch').append('<option value="' + val + '">' + val + '</option>');
+                    }
+                });
 
-            // --- ON CHANGE EVENTS TO FILTER DATATABLES ---
-            $('#filter-course').on('change', function () {
-                var val = $(this).val();
-                table.column(0).search(val ? '^'+val+'$' : '', true, false).draw();
-            });
+                // --- ON CHANGE EVENTS TO FILTER DATATABLES ---
+                $('#filter-course').on('change', function () {
+                    var val = $(this).val();
+                    table.column(0).search(val ? '^'+val+'$' : '', true, false).draw();
+                });
 
-            $('#filter-branch').on('change', function () {
-                var val = $(this).val();
-                table.column(branchColIndex).search(val ? '^'+val+'$' : '', true, false).draw();
-            });
+                $('#filter-branch').on('change', function () {
+                    var val = $(this).val();
+                    table.column(branchColIndex).search(val ? '^'+val+'$' : '', true, false).draw();
+                });
+            }
         });
     </script>
 </body>
