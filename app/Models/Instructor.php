@@ -26,6 +26,7 @@ class Instructor extends Authenticatable
         'email',
         'password',
         'tel_number',
+        'caw_ID', // <--- WAJIB TAMBAH NI UNTUK BENARKAN UPDATE CAWANGAN
     ];
 
     /**
@@ -44,5 +45,12 @@ class Instructor extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    // --- TAMBAHAN: RELATIONSHIP KE TABLE CAWANGAN ---
+    public function cawangan()
+    {
+        // Hubungkan 'caw_ID' dalam table instructor dengan 'caw_ID' dalam table cawangan
+        return $this->belongsTo(Cawangan::class, 'caw_ID', 'caw_ID'); 
     }
 }

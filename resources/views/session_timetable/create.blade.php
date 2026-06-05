@@ -104,6 +104,7 @@
                 <div class="time-grid">
                     <div class="form-group">
                         <label for="start_time">Start Date & Time:</label>
+                        {{-- Set id "start_time" untuk JS panggil kat bawah --}}
                         <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
                     </div>
                     <div class="form-group">
@@ -130,6 +131,22 @@
 
         </div>
     </div>
+
+    {{-- --- JAVASCRIPT UNTUK HALANG PILIH TARIKH LEPAS --- --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var now = new Date();
+            // Buat offset masa supaya ngam dengan waktu lokal Malaysia
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            
+            // Format masa jadi 'YYYY-MM-DDTHH:MM' 
+            // Sebab kotak <input type="datetime-local"> hanya baca format ni je
+            var minDatetime = now.toISOString().slice(0, 16); 
+            
+            // Paksa attribute 'min' ke dalam kotak start_time
+            document.getElementById('start_time').min = minDatetime;
+        });
+    </script>
 
 </body>
 </html>

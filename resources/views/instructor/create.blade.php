@@ -87,7 +87,8 @@
             font-size: 14px;
         }
 
-        input, textarea {
+        /* Ditambah 'select' kat sini supaya rupa dropdown sama macam kotak input */
+        input, textarea, select {
             width: 100%;
             padding: 12px;
             border: 2px solid #eee;
@@ -97,11 +98,13 @@
             font-family: inherit;
         }
 
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             border-color: #ffcc00; /* Kuning PSSGM bila focus */
             outline: none;
             background-color: #fffdf5;
         }
+        
+        select { cursor: pointer; }
 
         small {
             color: #777;
@@ -206,6 +209,19 @@
                     <input type="text" id="tel_number" name="tel_number" required value="{{ old('tel_number') }}" placeholder="012-3456789">
                 </div>
 
+                {{-- KOTAK DROPDOWN CAWANGAN DITAMBAH DI SINI --}}
+                <div class="form-group full-width">
+                    <label for="caw_ID">Assign to Cawangan (Branch)</label>
+                    <select id="caw_ID" name="caw_ID" required>
+                        <option value="" disabled selected>-- Select Cawangan --</option>
+                        @foreach($cawangans as $cawangan)
+                            <option value="{{ $cawangan->caw_ID ?? $cawangan->id }}" {{ old('caw_ID') == ($cawangan->caw_ID ?? $cawangan->id) ? 'selected' : '' }}>
+                                {{ $cawangan->caw_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="form-group full-width">
                     <label for="password">Account Password</label>
                     <div style="position: relative; display: flex; align-items: center;">
@@ -226,7 +242,6 @@
             <button type="submit" class="btn-register">Register Instructor</button>
         </form>
 
-        {{-- Butang Back digantikan untuk Admin --}}
         <div class="footer-link">
             <a href="{{ route('users.index') }}">
                 <span class="material-icons" style="font-size: 16px;">arrow_back</span> 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Courses - PSSGM Melaka</title>
+    <title>Course Directory - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     {{-- 1. ADD DATATABLES CSS --}}
@@ -28,8 +28,9 @@
         .btn-delete { background-color: #333; color: white; }
         .btn-schedule { background-color: #17a2b8; color: white; }
         .btn-join { background-color: #28a745; color: white; }
-        .btn-disabled { background-color: #6c757d; color: white; cursor: not-allowed; opacity: 0.8; }
-        .btn:hover:not(.btn-disabled) { opacity: 0.9; transform: translateY(-2px); }
+        .btn-disabled { background-color: #888; color: white; cursor: not-allowed; }
+        .btn-ended { background-color: #555; color: white; cursor: not-allowed; }
+        .btn:hover:not(.btn-disabled):not(.btn-ended) { opacity: 0.9; transform: translateY(-2px); }
 
         .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
         .alert-success { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
@@ -40,7 +41,7 @@
         .back-link:hover { transform: translateX(-5px); }
 
         /* --- CUSTOM FILTER BOXES --- */
-        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 2px dashed #eee; flex-wrap: wrap; }
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 35px; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 2px dashed #eee; flex-wrap: wrap; }
         .filter-box { flex: 1; min-width: 200px; }
         .filter-box label { display: block; font-size: 0.85em; color: #111; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
         .filter-box select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; outline: none; font-family: inherit; font-size: 0.95em; cursor: pointer; transition: 0.2s; }
@@ -52,8 +53,8 @@
         .dataTables_wrapper .dataTables_length select { border: 2px solid #eee; border-radius: 6px; padding: 5px; }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #ffcc00 !important; color: #111 !important; border: none; font-weight: bold; border-radius: 6px; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #111 !important; color: #ffcc00 !important; border: none; border-radius: 6px; }
-        .dataTables_wrapper .dataTables_filter { margin-bottom: 15px; }
-        .dataTables_wrapper .dataTables_length { margin-bottom: 15px; }
+        .dataTables_wrapper .dataTables_filter { margin-bottom: 20px; } 
+        .dataTables_wrapper .dataTables_length { margin-bottom: 20px; }
         .dataTables_wrapper .dataTables_info { margin-top: 15px; padding-top: 10px; }
         .dataTables_wrapper .dataTables_paginate { margin-top: 15px; padding-top: 10px; }
     </style>
@@ -69,7 +70,7 @@
                 @if(Auth::guard('instructor')->check())
                     <h2>My Assigned Courses</h2>
                 @else
-                    <h2>Course Directory & Schedules</h2>
+                    <h2>Available Courses</h2>
                 @endif
                 
                 @if(Auth::guard('staff')->check())
@@ -93,189 +94,233 @@
                 </div>
             @else
                 
-                {{-- KOTAK FILTER HANYA DITUNJUKKAN JIKA BUKAN INSTRUCTOR --}}
-                @if(!Auth::guard('instructor')->check())
-                <div class="filter-bar">
-                    <div class="filter-box">
-                        <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">category</span> Filter Course Type</label>
-                        <select id="filter-course">
-                            <option value="">-- All Courses --</option>
-                        </select>
-                    </div>
-                    <div class="filter-box">
-                        <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">domain</span> Filter Branch</label>
-                        <select id="filter-branch">
-                            <option value="">-- All Branches --</option>
-                        </select>
-                    </div>
-                </div>
-                @endif
-
-                <div style="overflow-x: auto;">
-                    <table class="dataTable">
-                        <thead>
-                            <tr>
-                                <th>Course Type</th>
-                                
-                                @if(!Auth::guard('instructor')->check())
-                                    <th>Assigned Instructor</th>
-                                @endif
-                                
-                                <th>Branch</th>
-                                <th>Location</th>
-                                <th>Schedule</th>
-                                <th style="text-align: center;">Capacity</th>
-                                <th style="text-align: center;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($courses as $course)
-                            
-                            @php
-                                // Fetch Session Data along with Gelanggang and Cawangan
-                                $sesi = \App\Models\SessionTimetable::with(['gelanggang.cawangan'])
-                                            ->where('course_ID', $course->course_ID ?? $course->id)->first();
-                                
-                                $hasSessions = $sesi ? true : false;
-                                $limit_capacity = $sesi->capacity ?? 10; 
-
-                                try {
-                                    $current_enrolled = \DB::table('enrollments')->where('course_ID', $course->course_ID ?? $course->id)->count();
-                                } catch(\Exception $e) {
-                                    $current_enrolled = 0; 
-                                }
-
-                                $isFull = $current_enrolled >= $limit_capacity;
-                            @endphp
-
-                            <tr>
-                                <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
-                                
-                                @if(!Auth::guard('instructor')->check())
-                                    <td>{{ $course->instructor->name ?? 'Unassigned' }}</td>
-                                @endif
-                                
-                                <td>
-                                    @if($hasSessions && $sesi->gelanggang && $sesi->gelanggang->cawangan)
-                                        <b>{{ $sesi->gelanggang->cawangan->caw_name }}</b>
-                                    @else
-                                        <span style="color: #888; font-style: italic;">TBA</span>
-                                    @endif
-                                </td>
-
-                                <td>
-                                    @if($hasSessions && $sesi->gelanggang)
-                                        {{ $sesi->gelanggang->gel_name }}
-                                    @else
-                                        <span style="color: #888; font-style: italic;">TBA</span>
-                                    @endif
-                                </td>
-
-                                <td style="color: #111;">
-                                    @if($hasSessions && $sesi->start_time && $sesi->end_time)
-                                        <div style="font-weight: bold; color: #cc0000; font-size: 1.05em;">
-                                            {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M Y') }}
-                                        </div>
-                                        <div style="color: #555; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                                            <span class="material-icons" style="font-size: 14px;">schedule</span>
-                                            {{ \Carbon\Carbon::parse($sesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($sesi->end_time)->format('h:i A') }}
-                                        </div>
-                                    @else
-                                        <span style="color: #cc0000; font-weight: bold;">
-                                            <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">event_busy</span> No Schedule Yet
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <td style="text-align: center;">
-                                    @if($hasSessions)
-                                        @if($isFull)
-                                            <span style="font-weight: bold; color: #cc0000; font-size: 1.1em;">{{ $current_enrolled }}/{{ $limit_capacity }}</span>
-                                            <div style="font-size: 0.7em; color: #cc0000; text-transform: uppercase; margin-top: 2px;">Full</div>
+                {{-- ========================================================== --}}
+                {{-- 1. PAPARAN INSTRUCTOR (Kekal Ringkas)                      --}}
+                {{-- ========================================================== --}}
+                @if(Auth::guard('instructor')->check())
+                    <div style="overflow-x: auto;">
+                        <table class="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>Course Type</th>
+                                    <th style="text-align: center;">Active Sessions</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($courses as $course)
+                                @php
+                                    // Instructor view can simply count how many upcoming sessions they have.
+                                    $session_count = \App\Models\SessionTimetable::where('course_ID', $course->course_ID ?? $course->id)->count();
+                                @endphp
+                                <tr>
+                                    <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
+                                    <td style="text-align: center;">
+                                        @if($session_count > 0)
+                                            <span style="font-weight: bold; color: #28a745; font-size: 1.2em;">{{ $session_count }}</span>
+                                            <div style="font-size: 0.7em; color: #666; text-transform: uppercase;">Sessions Scheduled</div>
                                         @else
-                                            <span style="font-weight: bold; color: #28a745; font-size: 1.1em;">{{ $current_enrolled }}/{{ $limit_capacity }}</span>
-                                            <div style="font-size: 0.7em; color: #666; text-transform: uppercase; margin-top: 2px;">Available</div>
+                                            <span style="font-weight: bold; color: #cc0000; font-size: 1.2em;">0</span>
+                                            <div style="font-size: 0.7em; color: #cc0000; text-transform: uppercase;">No Sessions</div>
                                         @endif
-                                    @else
-                                        <span style="color: #888;">-</span>
-                                    @endif
-                                </td>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <a href="{{ route('sessions.index', ['course_id' => $course->course_ID ?? $course->id]) }}" class="btn btn-schedule">
+                                            <span class="material-icons">event_note</span> Manage Sessions
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                {{-- ========================================================== --}}
+                {{-- 2. PAPARAN AHLI / STAFF (Satu Baris Untuk Satu Tarikh)     --}}
+                {{-- ========================================================== --}}
+                @else
+                    
+                    <div class="filter-bar">
+                        <div class="filter-box">
+                            <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">category</span> Filter Course Type</label>
+                            <select id="filter-course">
+                                <option value="">-- All Courses --</option>
+                            </select>
+                        </div>
+                        <div class="filter-box">
+                            <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">domain</span> Filter Branch</label>
+                            <select id="filter-branch">
+                                <option value="">-- All Branches --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="dataTable" id="memberTable">
+                            <thead>
+                                <tr>
+                                    <th>Course Type</th>
+                                    <th>Instructor</th>
+                                    <th>Branch</th>
+                                    <th>Location & Schedule</th>
+                                    <th style="text-align: center;">Capacity</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($courses as $course)
                                 
-                                <td style="text-align: center;">
-                                    <div style="display: flex; gap: 8px; justify-content: center;">
-                                        
-                                        @if(Auth::guard('staff')->check())
-                                            <a href="{{ route('courses.edit', $course->course_ID ?? $course->id) }}" class="btn btn-edit" title="Edit">
-                                                <span class="material-icons">edit</span>
-                                            </a>
-                                            <form action="{{ route('courses.destroy', $course->course_ID ?? $course->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this course?');" style="margin:0;">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-delete" title="Delete Course"><span class="material-icons">delete</span></button>
-                                            </form>
-                                        @endif
+                                @php
+                                    $sessions = \App\Models\SessionTimetable::with(['gelanggang.cawangan'])
+                                                ->where('course_ID', $course->course_ID ?? $course->id)
+                                                ->orderBy('start_time', 'asc')
+                                                ->get();
+                                @endphp
 
-                                        @if(Auth::guard('instructor')->check() && Auth::guard('instructor')->user()->instructor_ID == $course->instructor_ID)
-                                            <a href="{{ route('sessions.index') }}" class="btn btn-schedule">
-                                                <span class="material-icons">event_note</span> Manage Sessions
-                                            </a>
-                                        @endif
-
-                                        @if(!Auth::guard('staff')->check() && !Auth::guard('instructor')->check())
-                                            @if($course->instructor_ID && $hasSessions)
-                                                
-                                                @if($isFull)
-                                                    <button type="button" class="btn btn-disabled" title="Class is Full">
-                                                        <span class="material-icons">do_not_disturb_alt</span> Full
-                                                    </button>
-                                                @else
-                                                    <form action="{{ route('enroll.store', $course->course_ID ?? $course->id) }}" method="POST" style="margin:0;">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-join">
-                                                            <span class="material-icons">how_to_reg</span> Enroll
-                                                        </button>
+                                {{-- JIKA KURSUS BELUM ADA JADUAL --}}
+                                @if($sessions->isEmpty())
+                                    <tr>
+                                        <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
+                                        <td>{{ $course->instructor->name ?? 'TBA' }}</td>
+                                        <td><span style="color: #888; font-style: italic;">TBA</span></td>
+                                        <td>
+                                            <span style="color: #cc0000; font-weight: bold;">
+                                                <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">event_busy</span> No Schedule Yet
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center;"><span style="color: #888;">-</span></td>
+                                        <td style="text-align: center;">
+                                            @if(Auth::guard('staff')->check())
+                                                <div style="display: flex; gap: 8px; justify-content: center;">
+                                                    <a href="{{ route('courses.edit', $course->course_ID ?? $course->id) }}" class="btn btn-edit" title="Edit"><span class="material-icons">edit</span></a>
+                                                    <form action="{{ route('courses.destroy', $course->course_ID ?? $course->id) }}" method="POST" onsubmit="return confirm('Are you sure?');" style="margin:0;">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-delete" title="Delete"><span class="material-icons">delete</span></button>
                                                     </form>
-                                                @endif
-
+                                                </div>
                                             @else
-                                                <button type="button" class="btn btn-disabled" title="Class not ready for enrollment">
-                                                    <span class="material-icons">lock</span> Not Ready
-                                                </button>
+                                                <button type="button" class="btn btn-disabled"><span class="material-icons">lock</span> Not Ready</button>
                                             @endif
-                                        @endif
+                                        </td>
+                                    </tr>
 
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                                {{-- JIKA KURSUS ADA JADUAL --}}
+                                @else
+                                    @foreach($sessions as $sesi)
+                                        @php
+                                            $limit_capacity = $sesi->capacity ?? 10; 
+                                            
+                                            // 1. Semak kapasiti berdasarkan SESI (Bukan lagi kursus penuh)
+                                            try {
+                                                $session_id_to_check = $sesi->id ?? $sesi->session_ID;
+                                                $current_enrolled = \DB::table('enrollments')->where('session_ID', $session_id_to_check)->count();
+                                            } catch(\Exception $e) {
+                                                $current_enrolled = 0; 
+                                            }
+                                            $isFull = $current_enrolled >= $limit_capacity;
+                                            
+                                            // 2. SEMAK TARIKH & MASA (PENTING)
+                                            // Jika tarikh/masa kelas ni dah berlalu, kita set isPast jadi true.
+                                            $isPast = \Carbon\Carbon::parse($sesi->start_time)->isPast();
+                                        @endphp
+
+                                        <tr>
+                                            <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
+                                            
+                                            <td>{{ $course->instructor->name ?? 'TBA' }}</td>
+                                            
+                                            <td>
+                                                @if($sesi->gelanggang && $sesi->gelanggang->cawangan)
+                                                    <b>{{ $sesi->gelanggang->cawangan->caw_name }}</b>
+                                                @else
+                                                    <span style="color: #888; font-style: italic;">TBA</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                <div style="color: #111; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;">
+                                                    <span class="material-icons" style="font-size: 18px; color: #cc0000;">location_on</span>
+                                                    {{ $sesi->gelanggang->gel_name ?? 'TBA' }}
+                                                </div>
+                                                
+                                                <div style="font-size: 0.9em; color: #444; display: flex; align-items: center; gap: 6px; padding-left: 2px;">
+                                                    <span class="material-icons" style="font-size: 14px; color: #888;">calendar_today</span> 
+                                                    {{-- Letak style merah kalau dah expired --}}
+                                                    <b style="{{ $isPast ? 'color: #999; text-decoration: line-through;' : 'color: #222;' }}">
+                                                        {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M Y') }}
+                                                    </b> 
+                                                    <span style="color: #ccc;">|</span> 
+                                                    <span class="material-icons" style="font-size: 14px; color: #888;">schedule</span> 
+                                                    <span style="{{ $isPast ? 'color: #999;' : '' }}">
+                                                        {{ \Carbon\Carbon::parse($sesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($sesi->end_time)->format('h:i A') }}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td style="text-align: center;">
+                                                {{-- Kalau kelas dah expired, kapasiti tunjuk kelabu --}}
+                                                @if($isPast)
+                                                    <span style="font-weight: bold; color: #888; font-size: 1.1em;">{{ $current_enrolled }}/{{ $limit_capacity }}</span>
+                                                    <div style="font-size: 0.7em; color: #888; text-transform: uppercase;">Closed</div>
+                                                @elseif($isFull)
+                                                    <span style="font-weight: bold; color: #cc0000; font-size: 1.1em;">{{ $current_enrolled }}/{{ $limit_capacity }}</span>
+                                                    <div style="font-size: 0.7em; color: #cc0000; text-transform: uppercase;">Full</div>
+                                                @else
+                                                    <span style="font-weight: bold; color: #28a745; font-size: 1.1em;">{{ $current_enrolled }}/{{ $limit_capacity }}</span>
+                                                    <div style="font-size: 0.7em; color: #666; text-transform: uppercase;">Available</div>
+                                                @endif
+                                            </td>
+                                            
+                                            <td style="text-align: center;">
+                                                <div style="display: flex; gap: 8px; justify-content: center;">
+                                                    @if(Auth::guard('staff')->check())
+                                                        <a href="{{ route('courses.edit', $course->course_ID ?? $course->id) }}" class="btn btn-edit" title="Edit"><span class="material-icons">edit</span></a>
+                                                        <form action="{{ route('courses.destroy', $course->course_ID ?? $course->id) }}" method="POST" onsubmit="return confirm('Are you sure?');" style="margin:0;">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn btn-delete" title="Delete"><span class="material-icons">delete</span></button>
+                                                        </form>
+                                                    @else
+                                                        {{-- Logik Butang Member: Cek Expired Dulu! --}}
+                                                        @if($isPast)
+                                                            <button type="button" class="btn btn-ended" title="Class has ended"><span class="material-icons">history</span> Ended</button>
+                                                        @elseif($isFull)
+                                                            <button type="button" class="btn btn-disabled"><span class="material-icons">do_not_disturb_alt</span> Full</button>
+                                                        @else
+                                                            <form action="{{ route('enroll.store', $course->course_ID ?? $course->id) }}" method="POST" style="margin:0;">
+                                                                @csrf
+                                                                <input type="hidden" name="session_id" value="{{ $sesi->id ?? $sesi->session_ID }}">
+                                                                <button type="submit" class="btn btn-join"><span class="material-icons">how_to_reg</span> Enroll</button>
+                                                            </form>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             @endif
 
             <div class="footer-nav">
                 @if(Auth::guard('staff')->check())
-                    <a href="{{ route('staff.dashboard') }}" class="back-link">
-                        <span class="material-icons">arrow_back</span> Back to Admin Dashboard
-                    </a>
+                    <a href="{{ route('staff.dashboard') }}" class="back-link"><span class="material-icons">arrow_back</span> Back to Admin Dashboard</a>
                 @elseif(Auth::guard('instructor')->check())
-                    <a href="{{ route('instructor.dashboard') }}" class="back-link">
-                        <span class="material-icons">arrow_back</span> Back to Instructor Dashboard
-                    </a>
+                    <a href="{{ route('instructor.dashboard') }}" class="back-link"><span class="material-icons">arrow_back</span> Back to Instructor Dashboard</a>
                 @else
-                    <a href="{{ route('dashboard') }}" class="back-link">
-                        <span class="material-icons">arrow_back</span> Back to Member Dashboard
-                    </a>
+                    <a href="{{ route('dashboard') }}" class="back-link"><span class="material-icons">arrow_back</span> Back to Member Dashboard</a>
                 @endif
             </div>
-
         </div>
     </div>
 
-    {{-- 3. JQUERY & DATATABLES JS SCRIPTS --}}
+    {{-- SCRIPTS --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-    {{-- --- JAVASCRIPT TO INITIALIZE DATATABLES & CUSTOM FILTERS --- --}}
     <script>
         $(document).ready(function() {
             var table = $('.dataTable').DataTable({
@@ -285,35 +330,26 @@
                     "search": "Quick Search:",
                     "lengthMenu": "Show _MENU_ entries"
                 },
-                "order": [] // Disable auto-sort on initial load
+                "order": [] 
             });
 
-            var isInstructor = {{ Auth::guard('instructor')->check() ? 'true' : 'false' }};
-            
-            // JALANKAN FUNGSI FILTER HANYA JIKA BUKAN INSTRUCTOR
-            if (!isInstructor) {
-                var branchColIndex = 2; // Index kolum cawangan untuk staff/member
+            if ($('#memberTable').length > 0) {
+                var courseColIndex = 0; 
+                var branchColIndex = 2; 
 
-                // 1. Extract course types (Column 0) and populate Dropdown
-                table.column(0).data().unique().sort().each(function (d, j) {
+                table.column(courseColIndex).data().unique().sort().each(function (d, j) {
                     var val = $('<div>' + d + '</div>').text().trim();
-                    if(val) {
-                        $('#filter-course').append('<option value="' + val + '">' + val + '</option>');
-                    }
+                    if(val) { $('#filter-course').append('<option value="' + val + '">' + val + '</option>'); }
                 });
 
-                // 2. Extract branches (Branch Column) and populate Dropdown
                 table.column(branchColIndex).data().unique().sort().each(function (d, j) {
                     var val = $('<div>' + d + '</div>').text().trim();
-                    if(val && val !== 'TBA') {
-                        $('#filter-branch').append('<option value="' + val + '">' + val + '</option>');
-                    }
+                    if(val && val !== 'TBA') { $('#filter-branch').append('<option value="' + val + '">' + val + '</option>'); }
                 });
 
-                // --- ON CHANGE EVENTS TO FILTER DATATABLES ---
                 $('#filter-course').on('change', function () {
                     var val = $(this).val();
-                    table.column(0).search(val ? '^'+val+'$' : '', true, false).draw();
+                    table.column(courseColIndex).search(val ? '^'+val+'$' : '', true, false).draw();
                 });
 
                 $('#filter-branch').on('change', function () {

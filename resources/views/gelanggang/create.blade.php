@@ -34,6 +34,7 @@
             box-sizing: border-box; font-family: inherit; font-size: 1em; transition: 0.3s;
         }
         .form-control:focus { border-color: #cc0000; outline: none; box-shadow: 0 0 5px rgba(204,0,0,0.2); }
+        .form-control:disabled { background-color: #f5f5f5; cursor: not-allowed; color: #888; }
         textarea.form-control { resize: vertical; min-height: 100px; }
 
         .btn-submit { 
@@ -109,10 +110,13 @@
 
                 <div class="form-group">
                     <label for="instructor_ID">Assign Instructor:</label>
-                    <select id="instructor_ID" name="instructor_ID" class="form-control" required>
-                        <option value="" disabled {{ old('instructor_ID') ? '' : 'selected' }}>-- Select Instructor --</option>
+                    {{-- Default disabled, JS akan enable lepas Cawangan dipilih --}}
+                    <select id="instructor_ID" name="instructor_ID" class="form-control" required disabled>
+                        <option value="" disabled selected>-- Select Cawangan First --</option>
+                        
+                        {{-- Kita inject data-caw-id ke dalam setiap option supaya JS boleh baca --}}
                         @foreach($instructors as $instructor)
-                            <option value="{{ $instructor->instructor_ID ?? $instructor->id }}" {{ old('instructor_ID') == ($instructor->instructor_ID ?? $instructor->id) ? 'selected' : '' }}>
+                            <option value="{{ $instructor->instructor_ID ?? $instructor->id }}" data-caw-id="{{ $instructor->caw_ID }}">
                                 {{ $instructor->name }}
                             </option>
                         @endforeach
@@ -139,5 +143,69 @@
         </div>
     </div>
 
+    {{-- KOD JAVASCRIPT UNTUK FILTER INSTRUCTOR --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cawSelect = document.getElementById('caw_ID');
+            const instSelect = document.getElementById('instructor_ID');
+            
+            // Simpan senarai asal semua instructor dalam memory browser
+            const originalOptions = Array.from(instSelect.options).filter(opt => opt.value !== "");
+
+            function filterInstructors() {
+                const selectedCawId = cawSelect.value;
+
+                // Reset kotak instructor jadi kosong semula
+                instSelect.innerHTML = '';
+
+                // Buat placeholder baru
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+
+                if (!selectedCawId) {
+                    placeholder.text = '-- Select Cawangan First --';
+                    instSelect.appendChild(placeholder);
+                    instSelect.disabled = true;
+                    return;
+                }
+
+                placeholder.text = '-- Select Instructor --';
+                instSelect.appendChild(placeholder);
+                instSelect.disabled = false;
+
+                // Masukkan balik Instructor yang sama caw_ID dengan Cawangan dipilih
+                let hasInstructor = false;
+                originalOptions.forEach(opt => {
+                    if (opt.getAttribute('data-caw-id') === selectedCawId) {
+                        instSelect.appendChild(opt.cloneNode(true));
+                        hasInstructor = true;
+                    }
+                });
+
+                // Kalau Cawangan tu takde Instructor langsung
+                if (!hasInstructor) {
+                    const noInst = document.createElement('option');
+                    noInst.value = '';
+                    noInst.disabled = true;
+                    noInst.text = '-- No Instructor available in this Cawangan --';
+                    instSelect.appendChild(noInst);
+                }
+            }
+
+            // Dengar kalau-kalau staf tukar pilihan Cawangan
+            cawSelect.addEventListener('change', filterInstructors);
+
+            // Jalankan sekali waktu page baru loading (Penting kalau ralat/validation error)
+            filterInstructors();
+
+            // Kalau ada data lama (lepas validation error), pilih balik instructor tu
+            const oldInstructorId = "{{ old('instructor_ID') }}";
+            if (oldInstructorId) {
+                instSelect.value = oldInstructorId;
+            }
+        });
+    </script>
 </body>
 </html>

@@ -110,7 +110,7 @@
             <div class="header">
                 <img src="{{ asset('images/logo_gayong.png') }}" alt="Logo" class="logo-large">
                 <h2>Member Dashboard</h2>
-                <p style="color: #666;">Silat Seni Gayong Malaysia - Cawangan Melaka</p>
+                <p style="color: #666;">Pertubuhan Silat Seni Gayong Malaysia - Cawangan Melaka</p>
             </div>
 
             @if(is_null(Auth::user()->membership))
