@@ -147,13 +147,13 @@
 
             {{-- --- FILTER TABS --- --}}
             <div class="filter-tabs">
-                <button class="tab-btn active" onclick="showSection('members', this)">
+                <button class="tab-btn active" onclick="showSection('members', this)" data-target="members">
                     <span class="material-icons">sports_martial_arts</span> Members
                 </button>
-                <button class="tab-btn" onclick="showSection('staff', this)">
+                <button class="tab-btn" onclick="showSection('staff', this)" data-target="staff">
                     <span class="material-icons">admin_panel_settings</span> Management Staff
                 </button>
-                <button class="tab-btn" onclick="showSection('instructors', this)">
+                <button class="tab-btn" onclick="showSection('instructors', this)" data-target="instructors">
                     <span class="material-icons">sports</span> Instructors
                 </button>
             </div>
@@ -335,8 +335,8 @@
 
     {{-- --- JAVASCRIPT UNTUK TABS & PAGINATION --- --}}
     <script>
-        // Setup Pagination (DataTables)
         $(document).ready(function() {
+            // Setup Pagination (DataTables)
             $('.dataTable').DataTable({
                 "pageLength": 10,
                 "lengthMenu": [5, 10, 25, 50],
@@ -345,22 +345,41 @@
                     "lengthMenu": "Papar _MENU_ rekod"
                 }
             });
+
+            // --- FUNGSI INGAT TAB TERAKHIR (localStorage) ---
+            // Dapatkan memori tab mana yang terbuka. Kalau takde, buka 'members' by default
+            const lastTab = localStorage.getItem('activeUserTab') || 'members';
+            
+            // Cari butang yang sepadan dengan tab tu dan aktifkan dia
+            const lastBtn = document.querySelector(`.tab-btn[data-target="${lastTab}"]`);
+            if (lastBtn) {
+                // Jangan panggil showSection terus, kita cuma manipulasi kelas supaya table render betul
+                showSection(lastTab, lastBtn);
+            }
         });
 
         // Setup Tukar Tab
         function showSection(sectionName, btnElement) {
+            // 1. Simpan nama tab yang ditekan ke dalam memori browser
+            localStorage.setItem('activeUserTab', sectionName);
+
+            // 2. Hide semua section
             const sections = document.querySelectorAll('.user-section');
             sections.forEach(sec => sec.classList.remove('active-section'));
 
+            // 3. Tunjuk section yang sepatutnya
             const targetSection = document.getElementById(sectionName + '-section');
             if(targetSection) {
                 targetSection.classList.add('active-section');
             }
 
+            // 4. Update warna/garis pada butang tab
             const tabBtns = document.querySelectorAll('.tab-btn');
             tabBtns.forEach(btn => btn.classList.remove('active'));
 
-            btnElement.classList.add('active');
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
         }
     </script>
 
