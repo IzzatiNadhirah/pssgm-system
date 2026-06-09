@@ -13,6 +13,7 @@ class SessionTimetable extends Model
 
     // KITA BUANG $fillable DAN GANTI DENGAN $guarded
     // Maksudnya: "Jangan halang apa-apa data, benarkan semua masuk!"
+    // Termasuklah column 'postponed_from_start' & 'postponed_from_end' yang baru bos tambah kat pgAdmin tu!
     protected $guarded = [];
 
     // Hubungan dengan Course

@@ -39,6 +39,26 @@
     .user-meta .user-name { display: block; font-size: 0.9em; font-weight: bold; }
     .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; text-transform: uppercase; }
 
+    /* --- KITA EJAS SINI: Style untuk Link Profile --- */
+    .profile-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: 0.3s;
+        border: 1px solid transparent;
+    }
+    .profile-link:hover {
+        background-color: rgba(255, 204, 0, 0.1);
+        border-color: rgba(255, 204, 0, 0.3);
+    }
+    .profile-link .material-icons {
+        font-size: 36px;
+        color: #ffcc00;
+    }
+
     .btn-logout-nav {
         background-color: #cc0000; color: white; border: none; padding: 8px 15px;
         border-radius: 6px; font-weight: bold; font-size: 0.85em; cursor: pointer;
@@ -96,22 +116,36 @@
     </div>
 
     <div class="nav-right">
-        <div class="user-meta">
-            @php
-                $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
-                
-                // LOGIK BAHARU UNTUK TENTUKAN PANGKAT (ROLE) DENGAN TEPAT
-                if (Auth::guard('staff')->check()) {
-                    $role = strtolower(Auth::guard('staff')->user()->role) === 'admin' ? 'Admin' : 'System Staff';
-                } elseif (Auth::guard('instructor')->check()) {
-                    $role = 'Instructor';
-                } else {
-                    $role = 'Active Warrior';
-                }
-            @endphp
-            <span class="user-name">{{ $user->name }}</span>
-            <span class="user-role">{{ $role }}</span>
-        </div>
+        @php
+            $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
+            $isMember = false;
+            
+            // LOGIK BAHARU UNTUK TENTUKAN PANGKAT (ROLE) DENGAN TEPAT
+            if (Auth::guard('staff')->check()) {
+                $role = strtolower(Auth::guard('staff')->user()->role) === 'admin' ? 'Admin' : 'System Staff';
+            } elseif (Auth::guard('instructor')->check()) {
+                $role = 'Instructor';
+            } else {
+                $role = 'Active';
+                $isMember = true; // Set flag ni true kalau dia Ahli
+            }
+        @endphp
+
+        {{-- KITA EJAS SINI: Paparan berbeza untuk Ahli (Boleh klik) vs Staf/Cikgu (Statik) --}}
+        @if($isMember)
+            <a href="{{ route('profile.edit') }}" class="profile-link" title="Manage My Profile">
+                <div class="user-meta">
+                    <span class="user-name">{{ $user->name }}</span>
+                    <span class="user-role">{{ $role }}</span>
+                </div>
+                <span class="material-icons">account_circle</span>
+            </a>
+        @else
+            <div class="user-meta">
+                <span class="user-name">{{ $user->name }}</span>
+                <span class="user-role">{{ $role }}</span>
+            </div>
+        @endif
 
         <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
             @csrf

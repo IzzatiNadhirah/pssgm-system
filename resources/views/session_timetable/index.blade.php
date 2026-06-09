@@ -24,6 +24,9 @@
         .btn-delete { background-color: #333; color: white; }
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }
 
+        .btn-ended { background-color: #666; color: white; cursor: not-allowed; }
+        .btn-ended:hover { transform: none; opacity: 1; }
+
         .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
         .alert-success { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
 
@@ -44,7 +47,7 @@
             
             <div class="header-area">
                 <h2>Manage Class Sessions</h2>
-                <a href="{{ route('sessions.create') }}" class="btn btn-add">
+                <a href="{{ route('sessions.create', ['course_id' => request('course_id')]) }}" class="btn btn-add">
                     <span class="material-icons">add</span> Create New Session
                 </a>
             </div>
@@ -72,18 +75,48 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($timetables as $session)
-                            <tr>
-                                <td><b style="color: #111; font-size: 1.1em;">{{ $session->course->course_type ?? 'Unknown Course' }}</b></td>
+                            @php
+                                // KITA EJAS SINI: Logik untuk susun (sort) senarai kelas
+                                $sortedTimetables = $timetables->sort(function ($a, $b) {
+                                    $aPast = \Carbon\Carbon::parse($a->start_time)->isPast();
+                                    $bPast = \Carbon\Carbon::parse($b->start_time)->isPast();
+
+                                    // Kalau dua-dua dah lepas ATAU dua-dua belum lepas
+                                    if ($aPast === $bPast) {
+                                        if ($aPast) {
+                                            // Kalau dah lepas: Susun dari yang paling baru lepas ke paling lama
+                                            return $b->start_time <=> $a->start_time; 
+                                        } else {
+                                            // Kalau belum lepas: Susun dari yang paling dekat nak mula
+                                            return $a->start_time <=> $b->start_time;
+                                        }
+                                    }
+                                    
+                                    // Tolak kelas yang dah lepas ke bawah (return 1)
+                                    return $aPast ? 1 : -1;
+                                });
+                            @endphp
+
+                            {{-- Guna variable $sortedTimetables yang kita dah susun --}}
+                            @foreach($sortedTimetables as $session)
+                            @php
+                                $isPast = false;
+                                if($session->start_time) {
+                                    $isPast = \Carbon\Carbon::parse($session->start_time)->isPast();
+                                }
+                            @endphp
+                            
+                            <tr style="{{ $isPast ? 'background-color: #fcfcfc;' : '' }}">
+                                <td><b style="color: {{ $isPast ? '#888' : '#111' }}; font-size: 1.1em;">{{ $session->course->course_type ?? 'Unknown Course' }}</b></td>
                                 
-                                <td>{{ $session->gelanggang->gel_name ?? 'Location Not Set' }}</td>
+                                <td style="{{ $isPast ? 'color: #888;' : '' }}">{{ $session->gelanggang->gel_name ?? 'Location Not Set' }}</td>
                                 
                                 <td style="color: #111;">
                                     @if($session->start_time && $session->end_time)
-                                        <div style="font-weight: bold; color: #cc0000; font-size: 1.05em;">
+                                        <div style="font-weight: bold; color: {{ $isPast ? '#999' : '#cc0000' }}; font-size: 1.05em; {{ $isPast ? 'text-decoration: line-through;' : '' }}">
                                             {{ \Carbon\Carbon::parse($session->start_time)->format('d M Y') }}
                                         </div>
-                                        <div style="color: #555; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                        <div style="color: {{ $isPast ? '#aaa' : '#555' }}; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
                                             <span class="material-icons" style="font-size: 14px;">schedule</span>
                                             {{ \Carbon\Carbon::parse($session->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($session->end_time)->format('h:i A') }}
                                         </div>
@@ -92,21 +125,27 @@
                                     @endif
                                 </td>
                                 
-                                <td>{{ $session->capacity }} Pax</td>
+                                <td style="{{ $isPast ? 'color: #888;' : '' }}">{{ $session->capacity }} Pax</td>
                                 
                                 <td style="text-align: center;">
                                     <div style="display: flex; gap: 8px; justify-content: center;">
                                         
-                                        <a href="{{ route('sessions.edit', $session->id) }}" class="btn btn-edit" title="Edit Session">
-                                            <span class="material-icons" style="font-size: 18px;">edit</span>
-                                        </a>
-
-                                        <form action="{{ route('sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this session?');" style="margin:0;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-delete" title="Delete Session">
-                                                <span class="material-icons" style="font-size: 18px;">delete</span>
+                                        @if($isPast)
+                                            <button type="button" class="btn btn-ended" title="Class has ended. Records cannot be altered.">
+                                                <span class="material-icons" style="font-size: 18px;">history</span> Ended
                                             </button>
-                                        </form>
+                                        @else
+                                            <a href="{{ route('sessions.edit', $session->id) }}" class="btn btn-edit" title="Edit Session">
+                                                <span class="material-icons" style="font-size: 18px;">edit</span>
+                                            </a>
+
+                                            <form action="{{ route('sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this session?');" style="margin:0;">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-delete" title="Delete Session">
+                                                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                                                </button>
+                                            </form>
+                                        @endif
 
                                     </div>
                                 </td>

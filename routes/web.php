@@ -51,6 +51,9 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('/enroll/{course_id}', [EnrollmentController::class, 'store'])->name('enroll.store');
     Route::delete('/enroll/{id}', [EnrollmentController::class, 'destroy'])->name('enroll.destroy');
     Route::get('/my-timetable', [EnrollmentController::class, 'myTimetable'])->name('timetable.index');
+    // Route untuk Profile
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
 
 // --- STAFF & INSTRUCTOR ONLY (Pengurusan Sesi Bersama) ---

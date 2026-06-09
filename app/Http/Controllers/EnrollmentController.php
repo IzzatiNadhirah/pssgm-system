@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\Course;
-use App\Models\SessionTimetable; // PENTING: Import Model baru ni
-use Illuminate\Http\Request;
+use App\Models\SessionTimetable; 
+use Illuminate\Http\Request; // Tambah Request untuk baca session_id
 use Illuminate\Support\Facades\Auth;
 
 class EnrollmentController extends Controller
 {
-    public function store($course_id)
+    // KITA EJAS: Tambah Request $request kat sini
+    public function store(Request $request, $course_id)
     {
         $user = Auth::user();
 
@@ -22,46 +23,52 @@ class EnrollmentController extends Controller
         // Fetch course data
         $course = Course::findOrFail($course_id);
 
-        // 2. SAFETY LOCK: Check if there is an active session in SessionTimetable
-        // Kita cari kalau kursus ni dah ada sesi berjadual (Masa & Tempat)
-        $session = SessionTimetable::where('course_ID', $course_id)->first();
-
-        if (empty($course->instructor_ID) || empty($session)) {
-            return redirect()->back()->with('error', 'Enrollment blocked! This course does not have a complete schedule or assigned instructor yet.');
+        // 2. KITA EJAS: Baca Session ID yang spesifik dihantar dari butang Enroll
+        $session_id = $request->input('session_id');
+        
+        if (!$session_id) {
+            return redirect()->back()->with('error', 'Enrollment failed! Please select a valid class session date.');
         }
 
-        // 3. Check for duplicate enrollment
+        $session = SessionTimetable::findOrFail($session_id);
+
+        if (empty($course->instructor_ID)) {
+            return redirect()->back()->with('error', 'Enrollment blocked! This course does not have an assigned instructor yet.');
+        }
+
+        // 3. KITA EJAS: Check duplicate enrollment berdasarkan SESSION_ID, bukan lagi course_id
         $alreadyEnrolled = Enrollment::where('user_ID', $user->user_ID)
-                                     ->where('course_ID', $course_id)
+                                     ->where('session_ID', $session_id)
                                      ->exists();
 
         if ($alreadyEnrolled) {
-            return redirect()->back()->with('error', 'You are already enrolled in this course.');
+            return redirect()->back()->with('error', 'You are already enrolled for this specific date and time.');
         }
 
-        // 4. Check class capacity (Guna kapasiti dari SessionTimetable)
-        $currentEnrolled = Enrollment::where('course_ID', $course_id)->count();
+        // 4. KITA EJAS: Check class capacity berdasarkan SESSION_ID
+        $currentEnrolled = Enrollment::where('session_ID', $session_id)->count();
         
         if ($session->capacity && $currentEnrolled >= $session->capacity) {
-            return redirect()->back()->with('error', 'Sorry, this class is already full!');
+            return redirect()->back()->with('error', 'Sorry, this specific class session is already full!');
         }
 
-        // 5. Process enrollment
+        // 5. KITA EJAS: Simpan data pendaftaran berserta session_ID
         Enrollment::create([
             'user_ID' => $user->user_ID,
             'course_ID' => $course_id,
+            'session_ID' => $session_id, // <--- Wajib simpan session_ID kat database!
             'enroll_date' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Congratulations! You have successfully enrolled in ' . $course->course_type);
+        return redirect()->back()->with('success', 'Congratulations! You have successfully enrolled for the class on ' . \Carbon\Carbon::parse($session->start_time)->format('d M Y'));
     }
 
     public function myTimetable()
     {
         $user = Auth::user();
 
-        // Di sini kita tarik hubungan melalui course ke gelanggang dan sesi
-        $enrollments = Enrollment::with(['course.instructor', 'course.gelanggang'])
+        // KITA EJAS: Kena tarik data 'session' juga sebab jadual dah dipindahkan ke sana
+        $enrollments = Enrollment::with(['course.instructor', 'session.gelanggang.cawangan'])
                                  ->where('user_ID', $user->user_ID)
                                  ->orderBy('created_at', 'desc')
                                  ->get();

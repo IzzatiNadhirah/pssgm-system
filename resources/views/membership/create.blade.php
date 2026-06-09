@@ -110,7 +110,7 @@
         <div class="nav-right">
             <div class="user-meta">
                 <span class="user-name">{{ Auth::user()->name }}</span>
-                <span class="user-role">Active Warrior</span>
+                <span class="user-role">Active</span>
             </div>
             <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
                 @csrf

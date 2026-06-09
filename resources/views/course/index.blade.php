@@ -30,7 +30,10 @@
         .btn-join { background-color: #28a745; color: white; }
         .btn-disabled { background-color: #888; color: white; cursor: not-allowed; }
         .btn-ended { background-color: #555; color: white; cursor: not-allowed; }
-        .btn:hover:not(.btn-disabled):not(.btn-ended) { opacity: 0.9; transform: translateY(-2px); }
+        /* KITA EJAS SINI: Tambah style untuk butang Enrolled */
+        .btn-enrolled { background-color: #6c757d; color: white; cursor: not-allowed; opacity: 0.9; }
+
+        .btn:hover:not(.btn-disabled):not(.btn-ended):not(.btn-enrolled) { opacity: 0.9; transform: translateY(-2px); }
 
         .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
         .alert-success { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
@@ -208,20 +211,29 @@
                                 @else
                                     @foreach($sessions as $sesi)
                                         @php
+                                            $session_id_to_check = $sesi->id ?? $sesi->session_ID;
                                             $limit_capacity = $sesi->capacity ?? 10; 
                                             
-                                            // 1. Semak kapasiti berdasarkan SESI (Bukan lagi kursus penuh)
                                             try {
-                                                $session_id_to_check = $sesi->id ?? $sesi->session_ID;
                                                 $current_enrolled = \DB::table('enrollments')->where('session_ID', $session_id_to_check)->count();
                                             } catch(\Exception $e) {
                                                 $current_enrolled = 0; 
                                             }
                                             $isFull = $current_enrolled >= $limit_capacity;
                                             
-                                            // 2. SEMAK TARIKH & MASA (PENTING)
-                                            // Jika tarikh/masa kelas ni dah berlalu, kita set isPast jadi true.
                                             $isPast = \Carbon\Carbon::parse($sesi->start_time)->isPast();
+
+                                            // KITA EJAS SINI: Semak kalau user dah enroll sesi ni
+                                            $hasEnrolled = false;
+                                            if(Auth::guard('web')->check()) {
+                                                $user_id = Auth::guard('web')->user()->user_ID ?? Auth::guard('web')->id();
+                                                try {
+                                                    $hasEnrolled = \DB::table('enrollments')
+                                                        ->where('user_ID', $user_id)
+                                                        ->where('session_ID', $session_id_to_check)
+                                                        ->exists();
+                                                } catch(\Exception $e) {}
+                                            }
                                         @endphp
 
                                         <tr>
@@ -243,9 +255,21 @@
                                                     {{ $sesi->gelanggang->gel_name ?? 'TBA' }}
                                                 </div>
                                                 
+                                                @if($sesi->postponed_from_start)
+                                                    <div style="font-size: 0.85em; color: #999; text-decoration: line-through; display: flex; align-items: center; gap: 6px; padding-left: 2px;">
+                                                        <span class="material-icons" style="font-size: 14px; color: #ccc;">calendar_today</span> 
+                                                        <b>{{ \Carbon\Carbon::parse($sesi->postponed_from_start)->format('d M Y') }}</b> 
+                                                        <span style="color: #eee;">|</span> 
+                                                        <span class="material-icons" style="font-size: 14px; color: #ccc;">schedule</span> 
+                                                        {{ \Carbon\Carbon::parse($sesi->postponed_from_start)->format('h:i A') }} - {{ \Carbon\Carbon::parse($sesi->postponed_from_end)->format('h:i A') }}
+                                                    </div>
+                                                    <div style="font-size: 0.75em; color: #ff9900; font-weight: bold; padding-left: 4px; margin-bottom: 4px;">
+                                                        POSTPONED TO 👇
+                                                    </div>
+                                                @endif
+
                                                 <div style="font-size: 0.9em; color: #444; display: flex; align-items: center; gap: 6px; padding-left: 2px;">
                                                     <span class="material-icons" style="font-size: 14px; color: #888;">calendar_today</span> 
-                                                    {{-- Letak style merah kalau dah expired --}}
                                                     <b style="{{ $isPast ? 'color: #999; text-decoration: line-through;' : 'color: #222;' }}">
                                                         {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M Y') }}
                                                     </b> 
@@ -258,7 +282,6 @@
                                             </td>
 
                                             <td style="text-align: center;">
-                                                {{-- Kalau kelas dah expired, kapasiti tunjuk kelabu --}}
                                                 @if($isPast)
                                                     <span style="font-weight: bold; color: #888; font-size: 1.1em;">{{ $current_enrolled }}/{{ $limit_capacity }}</span>
                                                     <div style="font-size: 0.7em; color: #888; text-transform: uppercase;">Closed</div>
@@ -280,15 +303,17 @@
                                                             <button type="submit" class="btn btn-delete" title="Delete"><span class="material-icons">delete</span></button>
                                                         </form>
                                                     @else
-                                                        {{-- Logik Butang Member: Cek Expired Dulu! --}}
-                                                        @if($isPast)
+                                                        {{-- KITA EJAS SINI: Logik Butang Member --}}
+                                                        @if($hasEnrolled)
+                                                            <button type="button" class="btn btn-enrolled" title="You have enrolled in this class"><span class="material-icons">check_circle</span> Enrolled</button>
+                                                        @elseif($isPast)
                                                             <button type="button" class="btn btn-ended" title="Class has ended"><span class="material-icons">history</span> Ended</button>
                                                         @elseif($isFull)
                                                             <button type="button" class="btn btn-disabled"><span class="material-icons">do_not_disturb_alt</span> Full</button>
                                                         @else
                                                             <form action="{{ route('enroll.store', $course->course_ID ?? $course->id) }}" method="POST" style="margin:0;">
                                                                 @csrf
-                                                                <input type="hidden" name="session_id" value="{{ $sesi->id ?? $sesi->session_ID }}">
+                                                                <input type="hidden" name="session_id" value="{{ $session_id_to_check }}">
                                                                 <button type="submit" class="btn btn-join"><span class="material-icons">how_to_reg</span> Enroll</button>
                                                             </form>
                                                         @endif

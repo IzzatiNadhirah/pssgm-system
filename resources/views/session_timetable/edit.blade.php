@@ -33,6 +33,9 @@
         select.form-control { cursor: pointer; }
         input[type="datetime-local"], input[type="time"] { cursor: pointer; }
 
+        /* KITA EJAS SINI: Tambah style read-only */
+        .readonly-input { background-color: #f5f5f5; color: #666; cursor: not-allowed; font-weight: bold; }
+
         /* GRID UNTUK MASA */
         .time-grid { display: flex; gap: 15px; }
         .time-grid .form-group { flex: 1; margin-bottom: 20px; }
@@ -77,16 +80,24 @@
                 @csrf 
                 @method('PUT')
 
+                @php
+                    // Kita cari data kursus yang asalnya dipilih untuk sesi ini
+                    $currentCourse = $courses->firstWhere(function ($course) use ($timetable) {
+                        return ($course->course_ID ?? $course->id) == $timetable->course_ID;
+                    });
+                @endphp
+
                 <div class="form-group">
-                    <label for="course_ID">Select Course:</label>
-                    <select id="course_ID" name="course_ID" class="form-control" required>
-                        <option value="" disabled>-- Select Your Assigned Course --</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->course_ID ?? $course->id }}" {{ $timetable->course_ID == ($course->course_ID ?? $course->id) ? 'selected' : '' }}>
-                                {{ $course->course_type }} ({{ $course->course_code }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <label>Course:</label>
+                    @if($currentCourse)
+                        {{-- KITA EJAS SINI: Lock input kursus --}}
+                        <input type="text" class="form-control readonly-input" value="{{ $currentCourse->course_type }} ({{ $currentCourse->course_code }})" disabled>
+                        <input type="hidden" name="course_ID" value="{{ $currentCourse->course_ID ?? $currentCourse->id }}">
+                    @else
+                        {{-- Backup in case data kursus ghaib --}}
+                        <input type="text" class="form-control readonly-input" value="Error: Course data missing" disabled>
+                        <input type="hidden" name="course_ID" value="{{ $timetable->course_ID }}">
+                    @endif
                 </div>
 
                 <div class="form-group">
@@ -101,7 +112,6 @@
                     </select>
                 </div>
 
-                {{-- MASA DIPECAHKAN KEPADA DUA KOTAK DENGAN DATA LAMA --}}
                 <div class="time-grid">
                     <div class="form-group">
                         <label for="start_time">Start Date & Time:</label>
@@ -124,7 +134,7 @@
             </form>
 
             <div class="back-nav">
-                <a href="{{ route('sessions.index') }}" class="back-link">
+                <a href="{{ route('sessions.index', ['course_id' => $timetable->course_ID]) }}" class="back-link">
                     <span class="material-icons">arrow_back</span> Back to Manage Sessions
                 </a>
             </div>

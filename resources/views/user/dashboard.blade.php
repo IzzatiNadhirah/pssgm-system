@@ -13,7 +13,7 @@
         .nav-center { display: flex; gap: 20px; }
         .nav-link { color: white; text-decoration: none; font-size: 0.9em; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
         .nav-link:hover { color: #ffcc00; }
-        .nav-right { display: flex; align-items: center; gap: 20px; }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
         .user-meta { text-align: right; color: white; line-height: 1.2; }
         .user-meta .user-name { display: block; font-size: 0.9em; font-weight: bold; }
         .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; }
@@ -71,11 +71,17 @@
             <a href="{{ route('membership.history') }}" class="nav-link"><span class="material-icons">receipt_long</span> History</a>
         </div>
         <div class="nav-right">
-            <div class="user-meta">
-                <span class="user-name">{{ Auth::user()->name }}</span>
-                <span class="user-role">{{ is_null(Auth::user()->membership) ? 'Member' : 'Active Warrior' }}</span>
-            </div>
-            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+            {{-- KITA EJAS SINI: Jadikan nama & ikon boleh di-klik ke Profile --}}
+            <a href="{{ route('profile.edit') }}" style="display: flex; align-items: center; text-decoration: none; padding: 5px 10px; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.backgroundColor='rgba(255, 204, 0, 0.1)'" onmouseout="this.style.backgroundColor='transparent'" title="Manage My Profile">
+                <div class="user-meta" style="margin-right: 10px;">
+                    <span class="user-name" style="color: white;">{{ Auth::user()->name }}</span>
+                    {{-- Kekalkan status 'Active' atau 'Member' macam yang bos nak --}}
+                    <span class="user-role" style="font-weight: bold; color: #ffcc00;">{{ is_null(Auth::user()->membership) ? 'Member' : 'Active' }}</span>
+                </div>
+                <span class="material-icons" style="font-size: 38px; color: #ffcc00;">account_circle</span>
+            </a>
+
+            <form action="{{ route('logout') }}" method="POST" style="margin: 0; margin-left: 10px;">
                 @csrf
                 <button type="submit" class="btn-logout-nav">
                     <span class="material-icons" style="font-size: 18px;">logout</span> Logout
@@ -130,7 +136,7 @@
                 <div class="status-bar {{ $isExpired ? 'status-expired' : 'status-active' }}">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span class="material-icons">{{ $isExpired ? 'block' : 'verified' }}</span>
-                        <span>Status: {{ $isExpired ? 'Expired' : 'Active Warrior' }} ({{ Auth::user()->membership->member_type }})</span>
+                        <span>Status: {{ $isExpired ? 'Expired' : 'Active' }} ({{ Auth::user()->membership->member_type }})</span>
                     </div>
                     <div style="text-align: right;">
                         @if(Auth::user()->membership->member_type == 'Sepanjang Hayat')

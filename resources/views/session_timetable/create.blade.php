@@ -33,6 +33,9 @@
         select.form-control { cursor: pointer; }
         input[type="datetime-local"], input[type="time"] { cursor: pointer; }
 
+        /* Style utk kotak read-only */
+        .readonly-input { background-color: #f5f5f5; color: #666; cursor: not-allowed; font-weight: bold; }
+
         /* GRID UNTUK MASA */
         .time-grid { display: flex; gap: 15px; }
         .time-grid .form-group { flex: 1; margin-bottom: 20px; }
@@ -76,16 +79,35 @@
             <form action="{{ route('sessions.store') }}" method="POST">
                 @csrf 
 
+                @php
+                    // Logik menangkap ID Kursus
+                    $selectedCourseId = request('course_id');
+                    $selectedCourse = null;
+                    
+                    if($selectedCourseId) {
+                        $selectedCourse = $courses->first(function($item) use ($selectedCourseId) {
+                            return ($item->course_ID == $selectedCourseId) || ($item->id == $selectedCourseId);
+                        });
+                    }
+                @endphp
+
                 <div class="form-group">
-                    <label for="course_ID">Select Course:</label>
-                    <select id="course_ID" name="course_ID" class="form-control" required>
-                        <option value="" disabled selected>-- Select Your Assigned Course --</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->course_ID ?? $course->id }}" {{ old('course_ID') == ($course->course_ID ?? $course->id) ? 'selected' : '' }}>
-                                {{ $course->course_type }} ({{ $course->course_code }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <label>Course:</label>
+                    @if($selectedCourse)
+                        {{-- JIKA URL ADA ID KURSUS: Kita lock terus input ni --}}
+                        <input type="text" class="form-control readonly-input" value="{{ $selectedCourse->course_type }} ({{ $selectedCourse->course_code }})" disabled>
+                        <input type="hidden" name="course_ID" value="{{ $selectedCourse->course_ID ?? $selectedCourse->id }}">
+                    @else
+                        {{-- JIKA TIADA ID: Kita beri dropdown supaya cikgu tak sangkut --}}
+                        <select id="course_ID" name="course_ID" class="form-control" required>
+                            <option value="" disabled selected>-- Select Your Assigned Course --</option>
+                            @foreach($courses as $course)
+                                <option value="{{ $course->course_ID ?? $course->id }}" {{ old('course_ID') == ($course->course_ID ?? $course->id) ? 'selected' : '' }}>
+                                    {{ $course->course_type }} ({{ $course->course_code }})
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
 
                 <div class="form-group">
@@ -100,11 +122,9 @@
                     </select>
                 </div>
 
-                {{-- MASA DIPECAHKAN KEPADA DUA KOTAK --}}
                 <div class="time-grid">
                     <div class="form-group">
                         <label for="start_time">Start Date & Time:</label>
-                        {{-- Set id "start_time" untuk JS panggil kat bawah --}}
                         <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
                     </div>
                     <div class="form-group">
@@ -124,7 +144,7 @@
             </form>
 
             <div class="back-nav">
-                <a href="{{ route('sessions.index') }}" class="back-link">
+                <a href="{{ route('sessions.index', ['course_id' => request('course_id')]) }}" class="back-link">
                     <span class="material-icons">arrow_back</span> Back to Manage Sessions
                 </a>
             </div>
@@ -132,18 +152,11 @@
         </div>
     </div>
 
-    {{-- --- JAVASCRIPT UNTUK HALANG PILIH TARIKH LEPAS --- --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var now = new Date();
-            // Buat offset masa supaya ngam dengan waktu lokal Malaysia
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            
-            // Format masa jadi 'YYYY-MM-DDTHH:MM' 
-            // Sebab kotak <input type="datetime-local"> hanya baca format ni je
             var minDatetime = now.toISOString().slice(0, 16); 
-            
-            // Paksa attribute 'min' ke dalam kotak start_time
             document.getElementById('start_time').min = minDatetime;
         });
     </script>

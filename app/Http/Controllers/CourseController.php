@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Instructor;
+use App\Models\Cawangan; // KITA EJAS SINI: Wajib import model Cawangan
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -12,14 +13,30 @@ class CourseController extends Controller
 {
     public function index()
     {
-        // Jika yang login adalah Instructor, tunjuk kursus dia sahaja
+        // 1. Jika yang login adalah Instructor
         if (Auth::guard('instructor')->check()) {
             $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
-            
-            // Tarik sekali data Instructor supaya tak error
             $courses = Course::with(['instructor'])->where('instructor_ID', $instructorId)->get();
         } 
-        // Jika Staff (Admin) atau Super Admin yang login, tunjuk semua kursus
+        // 2. Jika yang login adalah Staff (Admin Cawangan)
+        elseif (Auth::guard('staff')->check()) {
+            $staff = Auth::guard('staff')->user();
+            $staffId = $staff->staff_ID ?? $staff->id; // Ambil ID staf
+
+            // Langkah 1: Cari Cawangan mana yang Staf ni jaga
+            $cawangan = Cawangan::where('staff_ID', $staffId)->first();
+
+            if ($cawangan) {
+                // Langkah 2: Jika staf ada cawangan, tapis kursus ikut caw_ID tu
+                $courses = Course::whereHas('instructor', function($query) use ($cawangan) {
+                    $query->where('caw_ID', $cawangan->caw_ID);
+                })->with(['instructor'])->get();
+            } else {
+                // Jika staf ni belum di-assign ke mana-mana cawangan, bagi array kosong
+                $courses = collect(); 
+            }
+        } 
+        // 3. Jika Super Admin yang login, tunjuk semua kursus
         else {
             $courses = Course::with(['instructor'])->get();
         }
@@ -29,13 +46,22 @@ class CourseController extends Controller
 
     public function create()
     {
-        // Pastikan hanya staff/admin boleh akses create page
         if (!Auth::guard('staff')->check()) {
             abort(403, 'Unauthorized action. Only Admin Staff can register a course.');
         }
 
-        // Fetch all instructors to populate the dropdown
-        $instructors = Instructor::all(); 
+        $staff = Auth::guard('staff')->user();
+        $staffId = $staff->staff_ID ?? $staff->id;
+        
+        // Cari Cawangan Staf
+        $cawangan = Cawangan::where('staff_ID', $staffId)->first();
+
+        // Tapis dropdown supaya keluar Instructor cawangan dia je
+        if ($cawangan) {
+            $instructors = Instructor::where('caw_ID', $cawangan->caw_ID)->get();
+        } else {
+            $instructors = collect();
+        }
         
         return view('course.create', compact('instructors'));
     }
@@ -63,13 +89,24 @@ class CourseController extends Controller
 
     public function edit($id)
     {
-        // Pastikan hanya staff/admin boleh akses edit page
         if (!Auth::guard('staff')->check()) {
             abort(403, 'Unauthorized action. Only Admin Staff can edit a course.');
         }
 
         $course = Course::findOrFail($id);
-        $instructors = Instructor::all();
+        
+        $staff = Auth::guard('staff')->user();
+        $staffId = $staff->staff_ID ?? $staff->id;
+        
+        // Cari Cawangan Staf
+        $cawangan = Cawangan::where('staff_ID', $staffId)->first();
+
+        // Tapis dropdown instructor untuk edit
+        if ($cawangan) {
+            $instructors = Instructor::where('caw_ID', $cawangan->caw_ID)->get();
+        } else {
+            $instructors = collect();
+        }
         
         return view('course.edit', compact('course', 'instructors'));
     }
@@ -93,7 +130,6 @@ class CourseController extends Controller
 
     public function destroy($id)
     {
-        // Pastikan hanya staff/admin boleh padam kursus
         if (!Auth::guard('staff')->check()) {
             abort(403, 'Unauthorized action. Only Admin Staff can delete a course.');
         }
@@ -111,8 +147,6 @@ class CourseController extends Controller
     {
         $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
         
-        // Tarik kursus milik instructor ni, dan tarik sekali data pendaftaran (enrollments) berserta data User (pelajar)
-        // NOTA: 'gelanggang' telah dibuang dari 'with()' kerana ia tiada lagi dalam jadual courses
         $courses = Course::with(['enrollments.user']) 
                          ->where('instructor_ID', $instructorId)
                          ->get();

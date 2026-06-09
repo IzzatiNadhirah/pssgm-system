@@ -47,7 +47,13 @@
         }
         .btn-submit:hover { background-color: #e6b800; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,204,0,0.3); }
 
-        .back-nav { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; }
+        /* --- KITA EJAS SINI: Tambah CSS untuk Info Card --- */
+        .info-card { background: #fff8e6; border-left: 5px solid #ffcc00; padding: 20px; border-radius: 8px; margin-top: 35px; color: #444; }
+        .info-card h4 { margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; color: #111; font-size: 1.1em; }
+        .info-card p { margin: 0; font-size: 0.9em; line-height: 1.6; }
+        .info-card ul { margin: 10px 0 0; padding-left: 20px; font-size: 0.9em; line-height: 1.6; }
+
+        .back-nav { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; }
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; }
         .back-link:hover { transform: translateX(-5px); color: #111; }
     </style>
@@ -99,6 +105,16 @@
                     <span class="material-icons">update</span> Update Course
                 </button>
             </form>
+
+            <!-- INFO CARD EXPLANATION -->
+            <div class="info-card">
+                <h4><span class="material-icons" style="color: #ff9900;">info</span> Where are the Date, Time, and Location settings?</h4>
+                <p>As a System Staff, you are only managing the <b>Course Subject</b> and the assigned <b>Instructor</b>. The specific class schedules are managed separately:</p>
+                <ul>
+                    <li>The assigned instructor (<b>{{ $course->instructor->name ?? 'TBA' }}</b>) will log into their dashboard to create and manage the session dates, times, and location (Gelanggang).</li>
+                    <li>If you need to change a schedule, please inform the respective instructor to update it from their panel.</li>
+                </ul>
+            </div>
 
             <div class="back-nav">
                 <a href="{{ route('courses.index') }}" class="back-link">
