@@ -249,11 +249,34 @@
         bengkungDropdown.innerHTML = '<option value="" disabled selected>-- Select Bengkung Level --</option>';
 
         let options = [];
-        if (category === 'kanak') {
-            options = ['Hitam Kosong', 'Awan Putih Cula Hijau', 'Awan Putih Cula Merah', 'Awan Putih Cula Kuning', 'Awan Putih Cula Hitam']; 
-        } else if (category === 'dewasa') {
-            options = ['Hitam Kosong', 'Awan Putih', 'Pelangi Hijau', 'Pelangi Merah (I - III)', 'Pelangi Kuning (I - IV)', 'Hitam Pelangi Cula Sakti (I - VI)']; 
-        }
+            if (category === 'kanak') {
+                options = [
+                    'Hitam Kosong', 
+                    'Awan Putih Cula Hijau', 
+                    'Awan Putih Cula Merah', 
+                    'Awan Putih Cula Kuning', 
+                    'Awan Putih Cula Hitam'
+                ]; 
+            } else if (category === 'dewasa') {
+                options = [
+                    'Hitam Kosong', 
+                    'Awan Putih', 
+                    'Pelangi Hijau', 
+                    'Pelangi Merah I', 
+                    'Pelangi Merah II', 
+                    'Pelangi Merah III', 
+                    'Pelangi Kuning I', 
+                    'Pelangi Kuning II', 
+                    'Pelangi Kuning III', 
+                    'Pelangi Kuning IV', 
+                    'Hitam Pelangi Cula Sakti I',
+                    'Hitam Pelangi Cula Sakti II',
+                    'Hitam Pelangi Cula Sakti III',
+                    'Hitam Pelangi Cula Sakti IV',
+                    'Hitam Pelangi Cula Sakti V',
+                    'Hitam Pelangi Cula Sakti VI'
+                ]; 
+            }
 
         options.forEach(function(level) {
             let newOption = document.createElement('option');

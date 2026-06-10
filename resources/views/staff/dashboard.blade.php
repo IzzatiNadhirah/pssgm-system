@@ -77,6 +77,15 @@
                     </div>
                 </a>
 
+                {{-- KITA TAMBAH SINI: Kad Menu Bengkung Approvals --}}
+                <a href="{{ route('staff.promotions.index') }}" class="card-link">
+                    <div class="card" style="border-bottom-color: #28a745;">
+                        <span class="material-icons" style="color: #28a745;">fact_check</span>
+                        <h3>Bengkung Approvals</h3>
+                        <p>Review and process student promotion requests from instructors.</p>
+                    </div>
+                </a>
+
             </div>
 
         </div>

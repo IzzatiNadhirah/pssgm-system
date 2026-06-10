@@ -225,9 +225,19 @@
                         <option disabled>--- DEWASA ---</option>
                         <option value="Awan Putih">Awan Putih</option>
                         <option value="Pelangi Hijau">Pelangi Hijau</option>
-                        <option value="Pelangi Merah (I - III)">Pelangi Merah (I - III)</option>
-                        <option value="Pelangi Kuning (I - IV)">Pelangi Kuning (I - IV)</option>
-                        <option value="Hitam Pelangi Cula Sakti (I - VI)">Hitam Pelangi Cula Sakti (I - VI)</option>
+                        <option value="Pelangi Merah I">Pelangi Merah I</option>
+                        <option value="Pelangi Merah II">Pelangi Merah II</option>
+                        <option value="Pelangi Merah III">Pelangi Merah III</option>
+                        <option value="Pelangi Kuning I">Pelangi Kuning I</option>
+                        <option value="Pelangi Kuning II">Pelangi Kuning II</option>
+                        <option value="Pelangi Kuning III">Pelangi Kuning III</option>
+                        <option value="Pelangi Kuning IV">Pelangi Kuning IV</option>
+                        <option value="Hitam Pelangi Cula Sakti I">Hitam Pelangi Cula Sakti I</option>
+                        <option value="Hitam Pelangi Cula Sakti II">Hitam Pelangi Cula Sakti II</option>
+                        <option value="Hitam Pelangi Cula Sakti III">Hitam Pelangi Cula Sakti III</option>
+                        <option value="Hitam Pelangi Cula Sakti IV">Hitam Pelangi Cula Sakti IV</option>
+                        <option value="Hitam Pelangi Cula Sakti V">Hitam Pelangi Cula Sakti V</option>
+                        <option value="Hitam Pelangi Cula Sakti VI">Hitam Pelangi Cula Sakti VI</option>
                     </select>
                 </div>
 

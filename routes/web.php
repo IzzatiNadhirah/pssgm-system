@@ -94,6 +94,11 @@ Route::middleware(['auth:staff'])->group(function () {
     Route::get('/gelanggangs-pending', [GelanggangController::class, 'pending'])->name('gelanggangs.pending');
     Route::post('/gelanggangs/{id}/approve', [GelanggangController::class, 'approve'])->name('gelanggangs.approve');
     Route::post('/gelanggangs/{id}/reject', [GelanggangController::class, 'reject'])->name('gelanggangs.reject');
+
+    // KITA EJAS SINI: Route untuk Staff urus Bengkung Pelajar (Approve/Reject)
+    Route::get('/staff/promotions', [\App\Http\Controllers\PromotionController::class, 'staffIndex'])->name('staff.promotions.index');
+    Route::post('/staff/promotions/{id}/approve', [\App\Http\Controllers\PromotionController::class, 'approve'])->name('staff.promotions.approve');
+    Route::post('/staff/promotions/{id}/reject', [\App\Http\Controllers\PromotionController::class, 'reject'])->name('staff.promotions.reject');
 });
 
 
@@ -101,6 +106,10 @@ Route::middleware(['auth:staff'])->group(function () {
 Route::middleware(['auth:instructor'])->group(function () {
     Route::get('/instructor/dashboard', fn() => view('instructor.dashboard'))->name('instructor.dashboard');
     Route::get('/instructor/enrolled-students', [CourseController::class, 'enrolledStudents'])->name('instructor.enrolled');
+
+    // Route untuk Request Bengkung
+    Route::get('/instructor/promotions', [\App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
+    Route::post('/instructor/promotions', [\App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     
     // Instructor boleh ubah jadual kursus dia sendiri
     Route::get('/courses/{id}/schedule', [CourseController::class, 'editSchedule'])->name('courses.schedule');

@@ -132,6 +132,13 @@
                     <div class="sub-text">View students joining your classes</div>
                 </a>
 
+                {{-- KITA EJAS SINI: Tambah Menu Bengkung Promotion --}}
+                <a href="{{ route('promotions.index') }}" class="card" style="border-bottom-color: #ff9900;">
+                    <span class="material-icons" style="color: #ff9900;">military_tech</span>
+                    Bengkung Promotion
+                    <div class="sub-text">Request bengkung upgrade for students</div>
+                </a>
+
             </div>
 
         </div>
