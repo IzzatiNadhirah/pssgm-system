@@ -69,8 +69,8 @@
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 0.9em; }
 
-        select { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-family: inherit; font-size: 1em; cursor: pointer; transition: 0.3s; }
-        select:focus { border-color: #ffcc00; outline: none; background-color: #fffdf5; }
+        select, input[type="file"] { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-family: inherit; font-size: 1em; cursor: pointer; transition: 0.3s; box-sizing: border-box; }
+        select:focus, input[type="file"]:focus { border-color: #ffcc00; outline: none; background-color: #fffdf5; }
 
         .btn-pay {
             width: 100%; padding: 15px; background-color: #111; color: #ffcc00; border: none; 
@@ -140,7 +140,8 @@
                 </div>
             @endif
 
-            <form action="{{ route('memberships.store') }}" method="POST">
+            {{-- 1. WAJIB TAMBAH enctype="multipart/form-data" UNTUK UPLOAD GAMBAR/PDF --}}
+            <form action="{{ route('memberships.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf 
 
                 <h3><span class="material-icons">person</span> Section 1: Member Profile</h3>
@@ -174,6 +175,16 @@
                     </p>
                 </div>
 
+                {{-- 2. RUANGAN UPLOAD RESIT (Disembunyikan pada awalnya) --}}
+                <div class="form-group" id="receipt-section" style="display: none; background: #fafafa; padding: 20px; border-radius: 8px; border: 2px dashed #ddd;">
+                    <label style="color: #cc0000; display: flex; align-items: center; gap: 5px;">
+                        <span class="material-icons" style="font-size: 18px;">receipt</span> Upload Payment Receipt
+                    </label>
+                    <p style="font-size: 0.85em; color: #555; margin-bottom: 10px;">Please transfer the exact amount to <b>MAYBANK 5600 1234 5678 (PSSGM Melaka)</b> and upload the receipt here.</p>
+                    
+                    <input type="file" id="receipt_file" name="receipt_file" accept=".pdf, image/png, image/jpeg, image/jpg" style="background: white;">
+                </div>
+
                 <button type="submit" class="btn-pay">
                     <span class="material-icons">verified_user</span> Complete Registration & Pay
                 </button>
@@ -188,5 +199,22 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#payment_method').on('change', function() {
+                if ($(this).val() === 'Manual Transfer') {
+                    $('#receipt-section').slideDown();
+                    $('#receipt_file').prop('required', true); // Jadikan ruangan ni wajib kalau pilih Manual
+                } else {
+                    $('#receipt-section').slideUp();
+                    $('#receipt_file').prop('required', false); // Tak wajib kalau pilih kaedah lain
+                }
+            });
+            
+            // Trigger incase page loading semula (kerana error) dan Manual Transfer dah dipilih
+            $('#payment_method').trigger('change');
+        });
+    </script>
 </body>
 </html>

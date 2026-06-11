@@ -95,10 +95,15 @@ Route::middleware(['auth:staff'])->group(function () {
     Route::post('/gelanggangs/{id}/approve', [GelanggangController::class, 'approve'])->name('gelanggangs.approve');
     Route::post('/gelanggangs/{id}/reject', [GelanggangController::class, 'reject'])->name('gelanggangs.reject');
 
-    // KITA EJAS SINI: Route untuk Staff urus Bengkung Pelajar (Approve/Reject)
+    // Route untuk Staff urus Bengkung Pelajar (Approve/Reject)
     Route::get('/staff/promotions', [\App\Http\Controllers\PromotionController::class, 'staffIndex'])->name('staff.promotions.index');
     Route::post('/staff/promotions/{id}/approve', [\App\Http\Controllers\PromotionController::class, 'approve'])->name('staff.promotions.approve');
     Route::post('/staff/promotions/{id}/reject', [\App\Http\Controllers\PromotionController::class, 'reject'])->name('staff.promotions.reject');
+
+    // KITA TAMBAH SINI: Route untuk Staff urus Bayaran Resit (Approve/Reject)
+    Route::get('/staff/payments', [\App\Http\Controllers\PaymentController::class, 'staffIndex'])->name('staff.payments.index');
+    Route::post('/staff/payments/{id}/approve', [\App\Http\Controllers\PaymentController::class, 'approve'])->name('staff.payments.approve');
+    Route::post('/staff/payments/{id}/reject', [\App\Http\Controllers\PaymentController::class, 'reject'])->name('staff.payments.reject');
 });
 
 

@@ -16,7 +16,11 @@ class PromotionRequest extends Model
         'current_bengkung', 
         'requested_bengkung', 
         'status', 
-        'remarks'
+        'remarks',
+        'mark_asas',       
+        'mark_silibus',    
+        'mark_disiplin',  
+        'total_mark'
     ];
 
     // Hubungan dengan Table Users (Pelajar)

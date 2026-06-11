@@ -24,4 +24,15 @@ class Payment extends Model
         'receipt_path', // Ready for your future QR scan/upload!
         'member_ID',
     ];
+
+    // ==========================================================
+    // KITA EJAS SINI: Tukar 'id' jadi 'user_ID'
+    // ==========================================================
+    public function user()
+    {
+        // Parameter 1: Model yang nak dihubungkan (User)
+        // Parameter 2: Foreign key dalam table payment (member_ID)
+        // Parameter 3: Primary key sebenar dalam table users (user_ID)
+        return $this->belongsTo(User::class, 'member_ID', 'user_ID');
+    }
 }

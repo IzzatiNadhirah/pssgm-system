@@ -30,7 +30,6 @@
         .btn-join { background-color: #28a745; color: white; }
         .btn-disabled { background-color: #888; color: white; cursor: not-allowed; }
         .btn-ended { background-color: #555; color: white; cursor: not-allowed; }
-        /* KITA EJAS SINI: Tambah style untuk butang Enrolled */
         .btn-enrolled { background-color: #6c757d; color: white; cursor: not-allowed; opacity: 0.9; }
 
         .btn:hover:not(.btn-disabled):not(.btn-ended):not(.btn-enrolled) { opacity: 0.9; transform: translateY(-2px); }
@@ -102,7 +101,7 @@
                 {{-- ========================================================== --}}
                 @if(Auth::guard('instructor')->check())
                     <div style="overflow-x: auto;">
-                        <table class="dataTable">
+                        <table class="dataTable" id="instructorTable">
                             <thead>
                                 <tr>
                                     <th>Course Type</th>
@@ -113,7 +112,6 @@
                             <tbody>
                                 @foreach($courses as $course)
                                 @php
-                                    // Instructor view can simply count how many upcoming sessions they have.
                                     $session_count = \App\Models\SessionTimetable::where('course_ID', $course->course_ID ?? $course->id)->count();
                                 @endphp
                                 <tr>
@@ -180,20 +178,21 @@
                                                 ->get();
                                 @endphp
 
-                                {{-- JIKA KURSUS BELUM ADA JADUAL --}}
+                                {{-- JIKA KURSUS BELUM ADA JADUAL (Kosong) --}}
                                 @if($sessions->isEmpty())
-                                    <tr>
-                                        <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
-                                        <td>{{ $course->instructor->name ?? 'TBA' }}</td>
-                                        <td><span style="color: #888; font-style: italic;">TBA</span></td>
-                                        <td>
-                                            <span style="color: #cc0000; font-weight: bold;">
-                                                <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">event_busy</span> No Schedule Yet
-                                            </span>
-                                        </td>
-                                        <td style="text-align: center;"><span style="color: #888;">-</span></td>
-                                        <td style="text-align: center;">
-                                            @if(Auth::guard('staff')->check())
+                                    {{-- KITA EJAS SINI: User biasa takkan nampak kalau tiada jadual --}}
+                                    @if(Auth::guard('staff')->check())
+                                        <tr>
+                                            <td><b style="color: #111; font-size: 1.1em;">{{ $course->course_type }}</b></td>
+                                            <td>{{ $course->instructor->name ?? 'TBA' }}</td>
+                                            <td><span style="color: #888; font-style: italic;">TBA</span></td>
+                                            <td data-sort="2_999999999999"> {{-- Sort paling bawah --}}
+                                                <span style="color: #cc0000; font-weight: bold;">
+                                                    <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">event_busy</span> No Schedule Yet
+                                                </span>
+                                            </td>
+                                            <td style="text-align: center;"><span style="color: #888;">-</span></td>
+                                            <td style="text-align: center;">
                                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                                     <a href="{{ route('courses.edit', $course->course_ID ?? $course->id) }}" class="btn btn-edit" title="Edit"><span class="material-icons">edit</span></a>
                                                     <form action="{{ route('courses.destroy', $course->course_ID ?? $course->id) }}" method="POST" onsubmit="return confirm('Are you sure?');" style="margin:0;">
@@ -201,16 +200,19 @@
                                                         <button type="submit" class="btn btn-delete" title="Delete"><span class="material-icons">delete</span></button>
                                                     </form>
                                                 </div>
-                                            @else
-                                                <button type="button" class="btn btn-disabled"><span class="material-icons">lock</span> Not Ready</button>
-                                            @endif
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
+                                    @endif
 
                                 {{-- JIKA KURSUS ADA JADUAL --}}
                                 @else
                                     @foreach($sessions as $sesi)
                                         @php
+                                            // KITA EJAS SINI: Tapis jika lokasi masih belum disetkan oleh cikgu
+                                            if(!Auth::guard('staff')->check() && (!$sesi->gelanggang || !$sesi->gelanggang->cawangan)) {
+                                                continue; 
+                                            }
+
                                             $session_id_to_check = $sesi->id ?? $sesi->session_ID;
                                             $limit_capacity = $sesi->capacity ?? 10; 
                                             
@@ -223,7 +225,6 @@
                                             
                                             $isPast = \Carbon\Carbon::parse($sesi->start_time)->isPast();
 
-                                            // KITA EJAS SINI: Semak kalau user dah enroll sesi ni
                                             $hasEnrolled = false;
                                             if(Auth::guard('web')->check()) {
                                                 $user_id = Auth::guard('web')->user()->user_ID ?? Auth::guard('web')->id();
@@ -249,7 +250,8 @@
                                                 @endif
                                             </td>
 
-                                            <td>
+                                            {{-- KITA EJAS SINI: Guna 'data-sort' untuk paksa kelas Ended ke bawah --}}
+                                            <td data-sort="{{ $isPast ? '1' : '0' }}_{{ \Carbon\Carbon::parse($sesi->start_time)->format('YmdHi') }}">
                                                 <div style="color: #111; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;">
                                                     <span class="material-icons" style="font-size: 18px; color: #cc0000;">location_on</span>
                                                     {{ $sesi->gelanggang->gel_name ?? 'TBA' }}
@@ -303,7 +305,6 @@
                                                             <button type="submit" class="btn btn-delete" title="Delete"><span class="material-icons">delete</span></button>
                                                         </form>
                                                     @else
-                                                        {{-- KITA EJAS SINI: Logik Butang Member --}}
                                                         @if($hasEnrolled)
                                                             <button type="button" class="btn btn-enrolled" title="You have enrolled in this class"><span class="material-icons">check_circle</span> Enrolled</button>
                                                         @elseif($isPast)
@@ -348,17 +349,18 @@
 
     <script>
         $(document).ready(function() {
-            var table = $('.dataTable').DataTable({
-                "pageLength": 10,
-                "lengthMenu": [5, 10, 25, 50],
-                "language": {
-                    "search": "Quick Search:",
-                    "lengthMenu": "Show _MENU_ entries"
-                },
-                "order": [] 
-            });
-
+            // KITA EJAS SINI: Custom Datatable Initialization
             if ($('#memberTable').length > 0) {
+                var table = $('#memberTable').DataTable({
+                    "pageLength": 10,
+                    "lengthMenu": [5, 10, 25, 50],
+                    "language": {
+                        "search": "Quick Search:",
+                        "lengthMenu": "Show _MENU_ entries"
+                    },
+                    "order": [[3, "asc"]] // Paksa order pada column 3 (Location & Schedule) yang ada data-sort
+                });
+
                 var courseColIndex = 0; 
                 var branchColIndex = 2; 
 
@@ -380,6 +382,17 @@
                 $('#filter-branch').on('change', function () {
                     var val = $(this).val();
                     table.column(branchColIndex).search(val ? '^'+val+'$' : '', true, false).draw();
+                });
+            } else {
+                // Untuk table instructor
+                $('#instructorTable').DataTable({
+                    "pageLength": 10,
+                    "lengthMenu": [5, 10, 25, 50],
+                    "language": {
+                        "search": "Quick Search:",
+                        "lengthMenu": "Show _MENU_ entries"
+                    },
+                    "order": [] 
                 });
             }
         });

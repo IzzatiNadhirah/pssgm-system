@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\PromotionRequest;
 use App\Models\User;
 use App\Models\Cawangan; 
-use App\Models\Enrollment; // Wajib tambah ni untuk panggil data pendaftaran
+use App\Models\Enrollment; 
 use Illuminate\Support\Facades\Auth;
 
 class PromotionController extends Controller
@@ -43,26 +43,38 @@ class PromotionController extends Controller
     // Proses simpan borang permohonan baru
     public function store(Request $request)
     {
+        // KITA EJAS SINI: Tambah validation untuk markah supaya tak lebih dari had
         $request->validate([
             'user_ID' => 'required',
             'requested_bengkung' => 'required|string',
-            'remarks' => 'nullable|string'
+            'remarks' => 'nullable|string',
+            'mark_asas' => 'required|numeric|min:0|max:40',
+            'mark_silibus' => 'required|numeric|min:0|max:40',
+            'mark_disiplin' => 'required|numeric|min:0|max:20',
         ]);
 
         $instructorId = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
         
         $pelajar = User::where('user_ID', $request->user_ID)->firstOrFail();
 
+        // KITA EJAS SINI: Kira jumlah markah
+        $total_mark = $request->mark_asas + $request->mark_silibus + $request->mark_disiplin;
+
         PromotionRequest::create([
             'user_ID' => $request->user_ID,
             'instructor_ID' => $instructorId,
-            'current_bengkung' => $pelajar->bengkung_level ?? 'Tiada Rekod',
+            'current_bengkung' => $pelajar->bengkung_level ?? 'No Record',
             'requested_bengkung' => $request->requested_bengkung,
             'remarks' => $request->remarks,
-            'status' => 'Pending' 
+            'status' => 'Pending',
+            // Simpan markah ke dalam database
+            'mark_asas' => $request->mark_asas,
+            'mark_silibus' => $request->mark_silibus,
+            'mark_disiplin' => $request->mark_disiplin,
+            'total_mark' => $total_mark
         ]);
 
-        return back()->with('success', 'Cadangan bengkung berjaya dihantar ke Staf Cawangan!');
+        return back()->with('success', 'Grading results and promotion request submitted successfully!');
     }
 
     // ==========================================================
@@ -113,7 +125,7 @@ class PromotionController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Permohonan diluluskan! Tahap bengkung pelajar telah dikemaskini.');
+        return back()->with('success', 'Request approved! Bengkung has been updated.');
     }
 
     // Tindakan MENOLAK permohonan
@@ -124,6 +136,6 @@ class PromotionController extends Controller
         // Ubah status permohonan jadi Rejected
         $promotion->update(['status' => 'Rejected']);
 
-        return back()->with('success', 'Permohonan bengkung telah ditolak.');
+        return back()->with('success', 'Bengkung request has been rejected.');
     }
 }

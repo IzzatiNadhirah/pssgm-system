@@ -72,13 +72,12 @@
         table.dataTable tbody tr { background-color: #fff !important; transition: 0.2s; }
         table.dataTable tbody tr:hover { background-color: #f9f9f9 !important; }
         
-        /* EJAS SINI: Paksa semua teks dalam table body jadi seragam */
         table.dataTable tbody td { 
             padding: 15px 12px !important; 
             border-bottom: 1px solid #eee !important; 
             vertical-align: middle; 
-            color: #111 !important; /* Semua hitam */
-            font-size: 1em !important; /* Saiz font seragam */
+            color: #111 !important; 
+            font-size: 1em !important; 
             font-family: inherit !important; 
         }
         table.dataTable.no-footer { border-bottom: 1px solid #eee !important; margin-bottom: 15px; }
@@ -142,7 +141,16 @@
                                     <span>Current: {{ $request->current_bengkung }}</span>
                                 </td>
                                 <td>
-                                    <b>{{ $request->requested_bengkung }}</b>
+                                    <b>{{ $request->requested_bengkung }}</b><br>
+                                    
+                                    @if($request->total_mark)
+                                        <span style="font-size: 1em; color: #111;">
+                                            Score: <b style="color: {{ $request->total_mark >= 60 ? '#28a745' : '#dc3545' }};">{{ $request->total_mark }}%</b>
+                                        </span>
+                                    @else
+                                        <span style="font-size: 1em; color: #111;">Score: <b>-</b></span>
+                                    @endif
+                                    
                                 </td>
                                 <td style="max-width: 200px; font-style: italic;">
                                     {{ $request->remarks ?: '-' }}

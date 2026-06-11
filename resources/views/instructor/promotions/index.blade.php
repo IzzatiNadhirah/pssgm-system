@@ -12,15 +12,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
         .content-area { padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
         
-        /* --- BUTTON BACK --- */
-        .btn-back-container { width: 100%; max-width: 1400px; display: flex; justify-content: flex-start; margin-bottom: -10px; }
-        .btn-back { 
-            display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; 
-            background-color: #333; color: white; text-decoration: none; 
-            border-radius: 8px; font-weight: bold; text-transform: uppercase; font-size: 0.9em; transition: 0.2s;
-        }
-        .btn-back:hover { background-color: #ffcc00; color: #111; box-shadow: 0 4px 10px rgba(255, 204, 0, 0.3); }
-
         .layout-grid {
             display: grid;
             grid-template-columns: 1.2fr 1fr;
@@ -75,7 +66,7 @@
         .empty-state { text-align: center; padding: 40px; color: #888; background: #fafafa; border-radius: 8px; border: 2px dashed #ddd; margin-top: 15px; }
         .empty-state .material-icons { font-size: 48px; color: #ccc; margin-bottom: 10px; }
 
-        /* --- OVERRIDE CSS DATATABLES SUPAYA 100% SAMA TEMA --- */
+        /* --- CSS DATATABLES TEMA PSSGM --- */
         .dataTables_wrapper { font-family: inherit !important; font-size: 0.9em; color: #111; margin-top: 10px; }
         .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_length { margin-bottom: 15px; color: #111 !important; }
         
@@ -100,11 +91,13 @@
         }
         table.dataTable tbody tr { background-color: #fff !important; transition: 0.2s; }
         table.dataTable tbody tr:hover { background-color: #f9f9f9 !important; }
+        
         table.dataTable tbody td { 
-            padding: 12px !important; 
+            padding: 15px 12px !important; 
             border-bottom: 1px solid #eee !important; 
             vertical-align: middle; 
-            color: #111 !important; /* Paksa teks semua jadi hitam pekat */
+            color: #111 !important; 
+            font-size: 1em !important;
             font-family: inherit !important; 
         }
         table.dataTable.no-footer { border-bottom: 1px solid #eee !important; margin-bottom: 15px; }
@@ -122,7 +115,6 @@
             background: #111 !important; color: #ffcc00 !important; border: 1px solid #111 !important; 
         }
 
-        /* Responsive Breakpoint */
         @media (max-width: 1024px) {
             .layout-grid { grid-template-columns: 1fr; }
             .container { padding: 25px; }
@@ -177,6 +169,7 @@
                                     <th>Date</th>
                                     <th>Student</th>
                                     <th>Level Update</th>
+                                    <th>Score</th> {{-- TAMBAH COLUMN SCORE --}}
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -185,13 +178,23 @@
                                 <tr>
                                     <td data-sort="{{ $request->created_at }}">
                                         <b>{{ \Carbon\Carbon::parse($request->created_at)->format('d M Y') }}</b><br>
-                                        {{ \Carbon\Carbon::parse($request->created_at)->format('h:i A') }}
+                                        <span style="font-size: 0.85em; color: #555;">{{ \Carbon\Carbon::parse($request->created_at)->format('h:i A') }}</span>
                                     </td>
                                     <td><b>{{ $request->user->name ?? 'Unknown Student' }}</b></td>
                                     <td>
                                         <span>{{ $request->current_bengkung }}</span>
-                                        <br><span class="material-icons" style="font-size: 14px;">arrow_downward</span><br>
-                                        <b style="color: #cc0000 !important;">{{ $request->requested_bengkung }}</b>
+                                        <br><span class="material-icons" style="font-size: 14px; color: #111;">arrow_downward</span><br>
+                                        <b>{{ $request->requested_bengkung }}</b>
+                                    </td>
+                                    <td>
+                                        {{-- PAPARKAN MARKAH --}}
+                                        @if($request->total_mark)
+                                            <b style="color: {{ $request->total_mark >= 60 ? '#28a745' : '#dc3545' }}; font-size: 1.1em;">
+                                                {{ $request->total_mark }}%
+                                            </b>
+                                        @else
+                                            <span style="color: #888;">-</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($request->status == 'Approved')
@@ -210,7 +213,7 @@
                 @endif
             </div>
 
-            {{-- KOTAK KANAN: BORANG PERMOHONAN --}}
+            {{-- KOTAK KANAN: BORANG PERMOHONAN & PEMARKAHAN --}}
             <div class="container">
                 <div class="header-area">
                     <span class="material-icons">military_tech</span>
@@ -263,6 +266,33 @@
                             </select>
                         </div>
 
+                        {{-- KOTAK MARKAH UJIAN --}}
+                        <div class="form-group" style="background: #fafafa; padding: 20px; border-radius: 8px; border: 2px dashed #ddd; margin-top: 10px;">
+                            <label style="color: #cc0000; display: flex; align-items: center; gap: 5px;">
+                                <span class="material-icons" style="font-size: 20px;">grading</span> Grading Results
+                            </label>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div>
+                                    <label style="font-size: 0.8em; color: #555;">Fizikal & Asas (/40)</label>
+                                    <input type="number" name="mark_asas" id="mark_asas" max="40" min="0" placeholder="0" class="mark-input" required>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8em; color: #555;">Silibus & Seni (/40)</label>
+                                    <input type="number" name="mark_silibus" id="mark_silibus" max="40" min="0" placeholder="0" class="mark-input" required>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8em; color: #555;">Disiplin (/20)</label>
+                                    <input type="number" name="mark_disiplin" id="mark_disiplin" max="20" min="0" placeholder="0" class="mark-input" required>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; text-align: right; font-size: 1.2em;">
+                                Total Score: <b id="total_score" style="color: #111;">0</b><b>%</b> 
+                                <span id="status_lulus" style="font-size: 0.8em; margin-left: 10px; padding: 3px 10px; border-radius: 12px; background: #eee; color: #888;">-</span>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label>Instructor Remarks (Optional)</label>
                             <textarea name="remarks" rows="3" placeholder="State why this student deserves the promotion..."></textarea>
@@ -270,7 +300,7 @@
                     </div>
 
                     <button type="submit" class="btn-submit">
-                        <span class="material-icons">send</span> Submit Request
+                        <span class="material-icons">send</span> Submit Grading & Request
                     </button>
                 </form>
             </div>
@@ -289,6 +319,30 @@
                 "lengthMenu": [5, 10, 25, 50],
                 "language": {
                     "search": "Search History:" 
+                }
+            });
+
+            // SKRIP KIRA MARKAH AUTOMATIK
+            $('.mark-input').on('input', function() {
+                let asas = parseInt($('#mark_asas').val()) || 0;
+                let silibus = parseInt($('#mark_silibus').val()) || 0;
+                let disiplin = parseInt($('#mark_disiplin').val()) || 0;
+
+                // Halang user masukkan lebih dari markah penuh
+                if(asas > 40) { $('#mark_asas').val(40); asas = 40; }
+                if(silibus > 40) { $('#mark_silibus').val(40); silibus = 40; }
+                if(disiplin > 20) { $('#mark_disiplin').val(20); disiplin = 20; }
+
+                let total = asas + silibus + disiplin;
+                $('#total_score').text(total);
+
+                // Kemaskini warna dan status lulus (> 60%)
+                if(total >= 60) {
+                    $('#total_score').css('color', '#28a745'); // Hijau
+                    $('#status_lulus').text('PASS').css({'background': '#d4edda', 'color': '#155724'});
+                } else {
+                    $('#total_score').css('color', '#dc3545'); // Merah
+                    $('#status_lulus').text('FAIL').css({'background': '#f8d7da', 'color': '#721c24'});
                 }
             });
         });

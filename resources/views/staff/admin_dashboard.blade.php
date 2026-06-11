@@ -125,20 +125,20 @@
 
             <div class="grid-container">
 
-                {{-- KIRA JUMLAH GELANGGANG PENDING --}}
                 @php
-                    // PENTING: Pastikan kolum status tu betul ejaannya ('pending')
-                    $pendingCount = \App\Models\Gelanggang::where('status', 'pending')->count();
+                    // Kira Gelanggang Pending
+                    $pendingGelanggangCount = \App\Models\Gelanggang::where('status', 'pending')->count();
+                    
+                    // KITA EJAS SINI: Kira Payment Pending
+                    $pendingPaymentCount = \App\Models\Payment::where('payment_status', 'Pending Verification')->count();
                 @endphp
 
-                <a href="{{ route('gelanggangs.pending') ?? '#' }}" class="card-link">
-                    {{-- Dah buang kelas 'alert-card', sekarang kotak ni hitam macam biasa --}}
+                <a href="{{ route('gelanggangs.pending') }}" class="card-link">
                     <div class="card">
                         <div class="icon-wrapper">
                             <span class="material-icons">notification_important</span>
-                            {{-- Titik merah cuma keluar kalau ada benda pending --}}
-                            @if($pendingCount > 0)
-                                <span class="notif-dot">{{ $pendingCount }}</span>
+                            @if($pendingGelanggangCount > 0)
+                                <span class="notif-dot">{{ $pendingGelanggangCount }}</span>
                             @endif
                         </div>
                         <h3>Pending Approvals</h3>
@@ -146,7 +146,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('cawangans.index') ?? '#' }}" class="card-link">
+                <a href="{{ route('cawangans.index') }}" class="card-link">
                     <div class="card">
                         <span class="material-icons">domain</span>
                         <h3>Manage Cawangan</h3>
@@ -154,7 +154,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('gelanggangs.index') ?? '#' }}" class="card-link">
+                <a href="{{ route('gelanggangs.index') }}" class="card-link">
                     <div class="card">
                         <span class="material-icons">stadium</span>
                         <h3>Active Gelanggang</h3>
@@ -162,7 +162,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('users.index') ?? '#' }}" class="card-link">
+                <a href="{{ route('users.index') }}" class="card-link">
                     <div class="card">
                         <span class="material-icons">manage_accounts</span>
                         <h3>System Users</h3>
@@ -170,11 +170,17 @@
                     </div>
                 </a>
 
-                <a href="{{ route('payments.index') ?? '#' }}" class="card-link">
+                {{-- KITA EJAS SINI: Kad Payment Approvals dengan Notifikasi --}}
+                <a href="{{ route('staff.payments.index') }}" class="card-link">
                     <div class="card">
-                        <span class="material-icons">receipt_long</span>
-                        <h3>Payment Reports</h3>
-                        <p>View detailed reports of all transactions.</p>
+                        <div class="icon-wrapper">
+                            <span class="material-icons">receipt_long</span>
+                            @if($pendingPaymentCount > 0)
+                                <span class="notif-dot">{{ $pendingPaymentCount }}</span>
+                            @endif
+                        </div>
+                        <h3>Payment Approvals</h3>
+                        <p>Review and verify manual bank transfer receipts.</p>
                     </div>
                 </a>
 
