@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Sessions - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
         .content-area { padding: 40px 20px; display: flex; justify-content: center; }
@@ -36,6 +39,19 @@
         .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .back-link:hover { transform: translateX(-5px); }
+
+        .dataTables_wrapper .dataTables_filter input { border: 2px solid #eee; border-radius: 6px; padding: 5px 10px; outline: none; background: white; }
+        .dataTables_wrapper .dataTables_filter input:focus { border-color: #cc0000; }
+        .dataTables_wrapper .dataTables_length select { border: 2px solid #eee; border-radius: 6px; padding: 5px; background: white; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #ffcc00 !important; color: #111 !important; border: none; font-weight: bold; border-radius: 6px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #111 !important; color: #ffcc00 !important; border: none; border-radius: 6px; }
+        .dataTables_wrapper .dataTables_info { font-size: 0.9em; color: #666; margin-top: 15px; }
+        .dataTables_wrapper .dataTables_paginate { margin-top: 15px; }
+        .dataTables_wrapper .dataTables_filter { margin-bottom: 20px; }
+        .dataTables_wrapper .dataTables_length { margin-bottom: 20px; }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body>
@@ -64,90 +80,154 @@
                 </div>
             @else
                 <div style="overflow-x: auto;">
-                    <table>
+                    <table id="sessionsTable" class="display">
                         <thead>
                             <tr>
                                 <th>Course Type</th>
                                 <th>Location (Gelanggang)</th>
                                 <th>Session Date & Time</th>
-                                <th>Capacity</th>
+                                <th style="text-align: center;">Capacity</th>
                                 <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @php
-                                // KITA EJAS SINI: Logik untuk susun (sort) senarai kelas
-                                $sortedTimetables = $timetables->sort(function ($a, $b) {
-                                    $aPast = \Carbon\Carbon::parse($a->start_time)->isPast();
-                                    $bPast = \Carbon\Carbon::parse($b->start_time)->isPast();
-
-                                    // Kalau dua-dua dah lepas ATAU dua-dua belum lepas
-                                    if ($aPast === $bPast) {
-                                        if ($aPast) {
-                                            // Kalau dah lepas: Susun dari yang paling baru lepas ke paling lama
-                                            return $b->start_time <=> $a->start_time; 
-                                        } else {
-                                            // Kalau belum lepas: Susun dari yang paling dekat nak mula
-                                            return $a->start_time <=> $b->start_time;
-                                        }
+                                $groupedTimetables = [];
+                                foreach($timetables as $session) {
+                                    if($session->start_time) {
+                                        // KITA EJAS SINI: Gunakan 'created_at' sebagai cap jari supaya 
+                                        // hanya jadual yang di-generate pada klik "Save" yang sama akan digroupkan.
+                                        $courseId = $session->course_ID ?? $session->course->id;
+                                        $gelId = $session->gel_ID ?? $session->gelanggang->id;
+                                        $createdAtStamp = $session->created_at ? \Carbon\Carbon::parse($session->created_at)->format('Ymd_His') : 'manual';
+                                        
+                                        $groupKey = "{$courseId}_{$gelId}_{$createdAtStamp}";
+                                    } else {
+                                        $groupKey = "unscheduled_" . $session->id;
                                     }
-                                    
-                                    // Tolak kelas yang dah lepas ke bawah (return 1)
-                                    return $aPast ? 1 : -1;
+
+                                    if(!isset($groupedTimetables[$groupKey])) {
+                                        $groupedTimetables[$groupKey] = [];
+                                    }
+                                    $groupedTimetables[$groupKey][] = $session;
+                                }
+
+                                // Susun setiap kumpulan berdasarkan tarikh kelas terawal
+                                uasort($groupedTimetables, function($a, $b) {
+                                    $timeA = $a[0]->start_time ? strtotime($a[0]->start_time) : 0;
+                                    $timeB = $b[0]->start_time ? strtotime($b[0]->start_time) : 0;
+                                    return $timeA <=> $timeB;
                                 });
                             @endphp
 
-                            {{-- Guna variable $sortedTimetables yang kita dah susun --}}
-                            @foreach($sortedTimetables as $session)
+                            @foreach($groupedTimetables as $groupKey => $group)
                             @php
-                                $isPast = false;
-                                if($session->start_time) {
-                                    $isPast = \Carbon\Carbon::parse($session->start_time)->isPast();
+                                // Susun sesi dalam kumpulan dari tarikh awal ke akhir
+                                usort($group, function($a, $b) {
+                                    return strtotime($a->start_time) <=> strtotime($b->start_time);
+                                });
+
+                                $firstSesi = $group[0];
+                                $lastSesi = $group[count($group) - 1];
+                                $sessionCount = count($group);
+                                $isWeekly = $sessionCount > 1; 
+
+                                // Periksa jika SEMUA kelas dalam group ni dah lepas
+                                $allPast = true;
+                                foreach($group as $s) {
+                                    if(!\Carbon\Carbon::parse($s->start_time)->isPast()) {
+                                        $allPast = false;
+                                        break;
+                                    }
                                 }
                             @endphp
                             
-                            <tr style="{{ $isPast ? 'background-color: #fcfcfc;' : '' }}">
-                                <td><b style="color: {{ $isPast ? '#888' : '#111' }}; font-size: 1.1em;">{{ $session->course->course_type ?? 'Unknown Course' }}</b></td>
+                            <tr style="{{ $allPast ? 'background-color: #fcfcfc;' : '' }}">
+                                <td><b style="color: {{ $allPast ? '#888' : '#111' }}; font-size: 1.1em;">{{ $firstSesi->course->course_type ?? 'Unknown Course' }}</b></td>
                                 
-                                <td style="{{ $isPast ? 'color: #888;' : '' }}">{{ $session->gelanggang->gel_name ?? 'Location Not Set' }}</td>
+                                <td style="{{ $allPast ? 'color: #888;' : '' }}">{{ $firstSesi->gelanggang->gel_name ?? 'Location Not Set' }}</td>
                                 
                                 <td style="color: #111;">
-                                    @if($session->start_time && $session->end_time)
-                                        <div style="font-weight: bold; color: {{ $isPast ? '#999' : '#cc0000' }}; font-size: 1.05em; {{ $isPast ? 'text-decoration: line-through;' : '' }}">
-                                            {{ \Carbon\Carbon::parse($session->start_time)->format('d M Y') }}
-                                        </div>
-                                        <div style="color: {{ $isPast ? '#aaa' : '#555' }}; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                                            <span class="material-icons" style="font-size: 14px;">schedule</span>
-                                            {{ \Carbon\Carbon::parse($session->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($session->end_time)->format('h:i A') }}
-                                        </div>
+                                    @if($firstSesi->start_time && $firstSesi->end_time)
+                                        @if($isWeekly)
+                                            {{-- PAPARAN UNTUK KELAS BERULANG (GROUP) --}}
+                                            <div style="font-weight: bold; color: {{ $allPast ? '#999' : '#17a2b8' }}; font-size: 1.05em; display: flex; align-items: center; gap: 5px;">
+                                                <span class="material-icons" style="font-size: 18px;">autorenew</span> 
+                                                Every {{ \Carbon\Carbon::parse($firstSesi->start_time)->format('l') }}
+                                            </div>
+                                            <div style="color: {{ $allPast ? '#aaa' : '#555' }}; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                                <span class="material-icons" style="font-size: 14px;">date_range</span>
+                                                {{ \Carbon\Carbon::parse($firstSesi->start_time)->format('d M Y') }} - {{ \Carbon\Carbon::parse($lastSesi->start_time)->format('d M Y') }}
+                                                <b style="color: #cc0000;">({{ $sessionCount }} Classes)</b>
+                                            </div>
+                                            <div style="color: {{ $allPast ? '#aaa' : '#555' }}; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                                <span class="material-icons" style="font-size: 14px;">schedule</span>
+                                                {{ \Carbon\Carbon::parse($firstSesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($firstSesi->end_time)->format('h:i A') }}
+                                            </div>
+                                        @else
+                                            {{-- PAPARAN UNTUK KELAS SATU HARI --}}
+                                            <div style="font-weight: bold; color: {{ $allPast ? '#999' : '#cc0000' }}; font-size: 1.05em; {{ $allPast ? 'text-decoration: line-through;' : '' }}">
+                                                {{ \Carbon\Carbon::parse($firstSesi->start_time)->format('d M Y') }}
+                                            </div>
+                                            <div style="color: {{ $allPast ? '#aaa' : '#555' }}; font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                                <span class="material-icons" style="font-size: 14px;">schedule</span>
+                                                {{ \Carbon\Carbon::parse($firstSesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($firstSesi->end_time)->format('h:i A') }}
+                                            </div>
+                                        @endif
                                     @else
                                         <span style="color: #cc0000; font-style: italic;">Masa belum ditetapkan</span>
                                     @endif
                                 </td>
                                 
-                                <td style="{{ $isPast ? 'color: #888;' : '' }}">{{ $session->capacity }} Pax</td>
+                                <td style="text-align: center; {{ $allPast ? 'color: #888;' : '' }}">{{ $firstSesi->capacity }} Pax</td>
                                 
-                                <td style="text-align: center;">
-                                    <div style="display: flex; gap: 8px; justify-content: center;">
-                                        
-                                        @if($isPast)
-                                            <button type="button" class="btn btn-ended" title="Class has ended. Records cannot be altered.">
-                                                <span class="material-icons" style="font-size: 18px;">history</span> Ended
-                                            </button>
-                                        @else
-                                            <a href="{{ route('sessions.edit', $session->id) }}" class="btn btn-edit" title="Edit Session">
-                                                <span class="material-icons" style="font-size: 18px;">edit</span>
-                                            </a>
-
-                                            <form action="{{ route('sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this session?');" style="margin:0;">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-delete" title="Delete Session">
-                                                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                                <td style="text-align: center; vertical-align: top;">
+                                    @if($isWeekly)
+                                        <details style="text-align: left; background: #fffdf5; border: 1px solid #ffcc00; border-radius: 6px; padding: 5px; min-width: 200px;">
+                                            <summary style="cursor: pointer; font-weight: bold; color: #111; outline: none; padding: 5px; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 5px; background: #ffcc00; border-radius: 4px;">
+                                                <span class="material-icons" style="font-size: 18px;">list</span> Manage Classes
+                                            </summary>
+                                            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                                @foreach($group as $sesi)
+                                                    @php $isPastSesi = \Carbon\Carbon::parse($sesi->start_time)->isPast(); @endphp
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: white; border: 1px solid #eee; border-radius: 4px;">
+                                                        <span style="font-size: 0.85em; {{ $isPastSesi ? 'text-decoration: line-through; color: #999;' : 'font-weight: bold; color: #333;' }}">
+                                                            {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M') }}
+                                                        </span>
+                                                        <div style="display: flex; gap: 4px;">
+                                                            @if($isPastSesi)
+                                                                <span style="font-size: 0.75em; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px;">Ended</span>
+                                                            @else
+                                                                <a href="{{ route('sessions.edit', $sesi->id) }}" class="btn btn-edit" style="padding: 2px 6px; font-size: 0.75em;" title="Edit"><span class="material-icons" style="font-size: 14px;">edit</span></a>
+                                                                <form action="{{ route('sessions.destroy', $sesi->id) }}" method="POST" onsubmit="return confirm('Delete this specific class on {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M') }}?');" style="margin:0;">
+                                                                    @csrf @method('DELETE')
+                                                                    <button type="submit" class="btn btn-delete" style="padding: 2px 6px; font-size: 0.75em;" title="Delete"><span class="material-icons" style="font-size: 14px;">delete</span></button>
+                                                                </form>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    @else
+                                        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 5px;">
+                                            @if($allPast)
+                                                <button type="button" class="btn btn-ended" title="Class has ended. Records cannot be altered.">
+                                                    <span class="material-icons" style="font-size: 18px;">history</span> Ended
                                                 </button>
-                                            </form>
-                                        @endif
-
-                                    </div>
+                                            @else
+                                                <a href="{{ route('sessions.edit', $firstSesi->id) }}" class="btn btn-edit" title="Edit Session">
+                                                    <span class="material-icons" style="font-size: 18px;">edit</span>
+                                                </a>
+                                                <form action="{{ route('sessions.destroy', $firstSesi->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this session?');" style="margin:0;">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-delete" title="Delete Session">
+                                                        <span class="material-icons" style="font-size: 18px;">delete</span>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -164,5 +244,21 @@
 
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#sessionsTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [5, 10, 25, 50],
+                "language": {
+                    "search": "Quick Search:",
+                    "lengthMenu": "Show _MENU_ entries"
+                },
+                "order": [] 
+            });
+        });
+    </script>
 </body>
 </html>

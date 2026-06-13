@@ -80,6 +80,10 @@
         .detail-label { font-size: 0.8em; color: #666; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
         .detail-val { font-size: 1.05em; color: #111; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .modal-footer { padding: 15px 20px; background: #f9f9f9; border-top: 1px solid #eee; text-align: right; }
+        
+        /* Details Summary untuk laci Drop Group */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body>
@@ -117,16 +121,19 @@
             @else
 
                 {{-- ========================================================= --}}
-                {{-- KITA EJAS SINI: PHP Sort Logic --}}
+                {{-- KITA EJAS SINI: PHP Sort & Group Logic --}}
                 {{-- ========================================================= --}}
                 @php
-                    $allRows = collect();
+                    $groupedRows = [];
+                    $flatRows = [];
 
                     foreach($enrollments as $enrollment) {
-                        $sesi = \App\Models\SessionTimetable::with('gelanggang')->where('course_ID', $enrollment->course_ID)->first();
+                        // Tarik Sesi (Fallback kalau relation tak wujud)
+                        $sesi = $enrollment->session ?? \App\Models\SessionTimetable::with('gelanggang')->where('id', $enrollment->session_ID)->orWhere('session_ID', $enrollment->session_ID)->first();
+                        
                         $isPast = false;
-                        $timestamp = 0;
                         $gabunganTamat = null;
+                        $timestamp = 0;
 
                         if($sesi && $sesi->start_time && $sesi->end_time) {
                             $tarikhMula = \Carbon\Carbon::parse($sesi->start_time)->format('Y-m-d');
@@ -142,21 +149,37 @@
                             $timestamp = \Carbon\Carbon::parse($sesi->start_time)->timestamp;
                         }
 
-                        $allRows->push([
+                        $item = [
                             'enrollment' => $enrollment,
                             'sesi' => $sesi,
                             'isPast' => $isPast,
                             'gabunganTamat' => $gabunganTamat,
-                            'sortRank' => $isPast ? 1 : 0, // 1 = Bawah (Ended), 0 = Atas (Active)
                             'timestamp' => $timestamp
-                        ]);
+                        ];
+
+                        // Simpan untuk Kalendar (Perlukan semua sesi)
+                        $flatRows[] = $item;
+
+                        // Logik Grouping untuk Table List
+                        if($sesi && $sesi->start_time) {
+                            $courseId = $enrollment->course_ID;
+                            $gelId = $sesi->gel_ID;
+                            $createdAtStamp = $sesi->created_at ? \Carbon\Carbon::parse($sesi->created_at)->format('Ymd_His') : 'manual';
+                            $groupKey = "{$courseId}_{$gelId}_{$createdAtStamp}";
+                        } else {
+                            $groupKey = "unscheduled_" . ($enrollment->enroll_ID ?? $enrollment->id);
+                        }
+
+                        if(!isset($groupedRows[$groupKey])) {
+                            $groupedRows[$groupKey] = [];
+                        }
+                        $groupedRows[$groupKey][] = $item;
                     }
 
-                    // Susun jadual
-                    $sortedRows = $allRows->sortBy([
-                        ['sortRank', 'asc'],
-                        ['timestamp', 'asc']
-                    ]);
+                    // Susun Kumpulan Berdasarkan Tarikh
+                    uasort($groupedRows, function($a, $b) {
+                        return $a[0]['timestamp'] <=> $b[0]['timestamp'];
+                    });
                 @endphp
                 
                 <div id="view-list" class="view-content active">
@@ -173,50 +196,125 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- Guna collection yang dah siap di-sort --}}
-                                @foreach($sortedRows as $row)
+                                @foreach($groupedRows as $groupKey => $group)
                                     @php
-                                        $enrollment = $row['enrollment'];
-                                        $sesi = $row['sesi'];
-                                        $isPast = $row['isPast'];
+                                        // Susun kelas dalam group mengikut kronologi
+                                        usort($group, function($a, $b) { return $a['timestamp'] <=> $b['timestamp']; });
+                                        
+                                        $firstItem = $group[0];
+                                        $lastItem = $group[count($group) - 1];
+                                        
+                                        $enrollment = $firstItem['enrollment'];
+                                        $firstSesi = $firstItem['sesi'];
+                                        $lastSesi = $lastItem['sesi'];
+                                        
+                                        $sessionCount = count($group);
+                                        $isWeekly = $sessionCount > 1;
+                                        
+                                        // Check kalau kesemua jadual dalam group ni dah tamat
+                                        $allPast = collect($group)->every(function($i) { return $i['isPast']; });
+
+                                        $hari = $firstSesi ? \Carbon\Carbon::parse($firstSesi->start_time)->format('l') : 'TBA';
+                                        $tarikhMula = $firstSesi ? \Carbon\Carbon::parse($firstSesi->start_time)->format('d M Y') : 'TBA';
+                                        $tarikhAkhir = $lastSesi ? \Carbon\Carbon::parse($lastSesi->start_time)->format('d M Y') : 'TBA';
+                                        $masaMula = $firstSesi ? \Carbon\Carbon::parse($firstSesi->start_time)->format('h:i A') : 'TBA';
+                                        $masaAkhir = $firstSesi ? \Carbon\Carbon::parse($firstSesi->end_time)->format('h:i A') : 'TBA';
                                     @endphp
-                                    <tr>
+
+                                    <tr style="{{ $allPast ? 'background-color: #fcfcfc;' : '' }}">
                                         <td style="font-weight: 500;">{{ \Carbon\Carbon::parse($enrollment->enroll_date)->format('d M Y') }}</td>
-                                        <td><b style="color: {{ $isPast ? '#888' : '#111' }};">{{ $enrollment->course->course_type ?? 'N/A' }}</b></td>
-                                        <td style="color: {{ $isPast ? '#888' : '#222' }};">{{ $enrollment->course->instructor->name ?? 'TBA' }}</td>
+                                        
+                                        <td><b style="color: {{ $allPast ? '#888' : '#111' }};">{{ $enrollment->course->course_type ?? 'N/A' }}</b></td>
+                                        
+                                        <td style="color: {{ $allPast ? '#888' : '#222' }};">{{ $enrollment->course->instructor->name ?? 'TBA' }}</td>
+                                        
                                         <td>
-                                            @if($sesi && $sesi->gelanggang)
-                                                <span style="color: {{ $isPast ? '#888' : '#222' }};">{{ $sesi->gelanggang->gel_name }}</span>
+                                            @if($firstSesi && $firstSesi->gelanggang)
+                                                <span style="color: {{ $allPast ? '#888' : '#222' }}; font-weight: bold;">
+                                                    <span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">location_on</span>
+                                                    {{ $firstSesi->gelanggang->gel_name }}
+                                                </span>
                                             @else
                                                 <span style="color: #cc0000; font-style: italic;">TBA</span>
                                             @endif
                                         </td>
+
                                         <td>
-                                            @if($sesi && $sesi->start_time && $sesi->end_time)
-                                                <div style="font-weight: bold; color: {{ $isPast ? '#888' : '#111' }}; font-size: 1.05em; {{ $isPast ? 'text-decoration: line-through;' : '' }}">
-                                                    {{ \Carbon\Carbon::parse($sesi->start_time)->format('d M Y') }}
-                                                </div>
-                                                <div style="font-size: 0.95em; margin-top: 4px; display: flex; align-items: center; gap: 4px; color: {{ $isPast ? '#888' : '#222' }};">
-                                                    <span class="material-icons" style="font-size: 16px; color: {{ $isPast ? '#888' : '#cc0000' }};">schedule</span>
-                                                    {{ \Carbon\Carbon::parse($sesi->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($sesi->end_time)->format('h:i A') }}
-                                                </div>
+                                            @if($firstSesi && $firstSesi->start_time)
+                                                @if($isWeekly)
+                                                    <div style="font-weight: bold; color: {{ $allPast ? '#888' : '#17a2b8' }}; font-size: 1.05em; display: flex; align-items: center; gap: 5px;">
+                                                        <span class="material-icons" style="font-size: 16px;">autorenew</span> 
+                                                        Every {{ $hari }}
+                                                    </div>
+                                                    <div style="font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px; color: {{ $allPast ? '#888' : '#555' }};">
+                                                        <span class="material-icons" style="font-size: 14px;">date_range</span>
+                                                        {{ $tarikhMula }} - {{ $tarikhAkhir }} <b style="color: #cc0000;">({{ $sessionCount }} Classes)</b>
+                                                    </div>
+                                                    <div style="font-size: 0.9em; margin-top: 4px; display: flex; align-items: center; gap: 4px; color: {{ $allPast ? '#888' : '#555' }};">
+                                                        <span class="material-icons" style="font-size: 14px;">schedule</span>
+                                                        {{ $masaMula }} - {{ $masaAkhir }}
+                                                    </div>
+                                                @else
+                                                    <div style="font-weight: bold; color: {{ $allPast ? '#888' : '#111' }}; font-size: 1.05em; {{ $allPast ? 'text-decoration: line-through;' : '' }}">
+                                                        {{ $tarikhMula }}
+                                                    </div>
+                                                    <div style="font-size: 0.95em; margin-top: 4px; display: flex; align-items: center; gap: 4px; color: {{ $allPast ? '#888' : '#222' }};">
+                                                        <span class="material-icons" style="font-size: 16px; color: {{ $allPast ? '#888' : '#cc0000' }};">schedule</span>
+                                                        {{ $masaMula }} - {{ $masaAkhir }}
+                                                    </div>
+                                                @endif
                                             @else
                                                 <span style="color: #cc0000; font-style: italic;">TBA</span>
                                             @endif
                                         </td>
-                                        <td style="text-align: center;">
-                                            @if($isPast)
-                                                <button type="button" class="btn-ended" disabled title="This class has already ended">
-                                                    <span class="material-icons" style="font-size: 16px;">history</span> Ended
-                                                </button>
+
+                                        <td style="text-align: center; vertical-align: top;">
+                                            @if($isWeekly)
+                                                <details style="text-align: left; background: #fffdf5; border: 1px solid #ffcc00; border-radius: 6px; padding: 5px; width: 100%; box-sizing: border-box;">
+                                                    <summary style="cursor: pointer; font-weight: bold; color: #111; outline: none; padding: 2px; font-size: 0.75em; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                                        <span class="material-icons" style="font-size: 14px;">visibility</span> Show Dates & Drop
+                                                    </summary>
+                                                    <div style="margin-top: 5px; display: flex; flex-direction: column; gap: 4px;">
+                                                        @foreach($group as $item)
+                                                            @php 
+                                                                $isPastSesi = $item['isPast']; 
+                                                                $enr = $item['enrollment'];
+                                                                $s = $item['sesi'];
+                                                            @endphp
+                                                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; background: white; border: 1px solid #eee; border-radius: 4px;">
+                                                                <span style="font-size: 0.85em; {{ $isPastSesi ? 'text-decoration: line-through; color: #999;' : 'font-weight: bold; color: #333;' }}">
+                                                                    {{ \Carbon\Carbon::parse($s->start_time)->format('d M') }}
+                                                                </span>
+                                                                <div>
+                                                                    @if($isPastSesi)
+                                                                        <span style="font-size: 0.75em; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px;">Ended</span>
+                                                                    @else
+                                                                        <form action="{{ route('enroll.destroy', $enr->enroll_ID ?? $enr->id) }}" method="POST" onsubmit="return confirm('Drop this class on {{ \Carbon\Carbon::parse($s->start_time)->format('d M') }}?');" style="margin:0;">
+                                                                            @csrf @method('DELETE')
+                                                                            <button type="submit" class="btn-unenroll" style="padding: 2px 6px; font-size: 0.75em;" title="Drop Class"><span class="material-icons" style="font-size: 14px;">logout</span></button>
+                                                                        </form>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </details>
                                             @else
-                                                <form action="{{ route('enroll.destroy', $enrollment->enroll_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to unenroll from this class? This action cannot be undone.');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-unenroll">
-                                                        <span class="material-icons" style="font-size: 16px;">logout</span> Unenroll
-                                                    </button>
-                                                </form>
+                                                <div style="display: flex; justify-content: center; margin-top: 5px;">
+                                                    @if($allPast)
+                                                        <button type="button" class="btn-ended" disabled title="This class has already ended">
+                                                            <span class="material-icons" style="font-size: 16px;">history</span> Ended
+                                                        </button>
+                                                    @else
+                                                        <form action="{{ route('enroll.destroy', $enrollment->enroll_ID ?? $enrollment->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to unenroll from this class? This action cannot be undone.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn-unenroll">
+                                                                <span class="material-icons" style="font-size: 16px;">logout</span> Drop
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
                                     </tr>
@@ -291,8 +389,8 @@
             var calendarEl = document.getElementById('calendar');
             
             var eventsData = [
-                // Guna collection yang dah siap di-sort juga
-                @foreach($sortedRows ?? [] as $row)
+                // Kalendar akan guna array $flatRows supaya dia lukis SATU-SATU jadual dalam kotak
+                @foreach($flatRows ?? [] as $row)
                     @php
                         $enrollment = $row['enrollment'];
                         $sesi = $row['sesi'];

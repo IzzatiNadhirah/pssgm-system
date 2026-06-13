@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instructor;
-use App\Models\Cawangan; // TAMBAH NI: Supaya controller boleh tarik data Cawangan
+use App\Models\Cawangan; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class InstructorController extends Controller
 {
@@ -114,5 +115,53 @@ class InstructorController extends Controller
 
         // 3. REDIRECT: Hantar balik ke senarai Users lepas delete
         return redirect()->route('users.index')->with('success', 'Instructor deleted successfully!');
+    }
+
+    // ==========================================================
+    // SEKSYEN BARU: PENGURUSAN KEHADIRAN (ATTENDANCE)
+    // ==========================================================
+
+    // KITA EJAS SINI: Fungsi untuk paparkan page Attendance
+    public function attendanceIndex()
+    {
+        $instructor_id = Auth::guard('instructor')->user()->instructor_ID ?? Auth::guard('instructor')->id();
+        
+        // Tarik kursus yang diajar oleh cikgu ini beserta enrolmen
+        $courses = \App\Models\Course::with(['enrollments.user', 'instructor'])
+                    ->where('instructor_ID', $instructor_id)
+                    ->get();
+
+        return view('instructor.attendance', compact('courses'));
+    }
+
+    public function storeAttendance(Request $request)
+    {
+        // 1. Dapatkan senarai ID pelajar yang di-tick (checkbox)
+        $attended_users = $request->input('attendance', []); // Array ID pelajar
+        $session_id = $request->input('session_id');
+        $date = $request->input('attendance_date', date('Y-m-d')); // Guna tarikh yang dipilih atau harini
+
+        // 2. Jika tiada sesi dipilih, buang error
+        if (!$session_id) {
+            return back()->with('error', 'Session ID is missing!');
+        }
+
+        // 3. Padam rekod kehadiran lama untuk tarikh & sesi ini (supaya tak bertindih kalau cikgu edit/kemaskini)
+        // KITA EJAS SINI: Betulkan huruf kecil
+        \App\Models\Attendance::where('session_id', $session_id)
+            ->where('date', $date)
+            ->delete();
+
+        // 4. Masukkan rekod baru yang di-tick oleh cikgu
+        foreach ($attended_users as $user_id) {
+            \App\Models\Attendance::create([
+                'session_id' => $session_id, // KITA EJAS SINI: Betulkan huruf kecil
+                'user_id'    => $user_id,    // KITA EJAS SINI: Betulkan huruf kecil
+                'date'       => $date,
+                'status'     => 'Hadir'
+            ]);
+        }
+
+        return back()->with('success', 'Attendance for ' . \Carbon\Carbon::parse($date)->format('d M Y') . ' saved successfully!');
     }
 }

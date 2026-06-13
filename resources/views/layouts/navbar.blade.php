@@ -107,10 +107,10 @@
                 <span class="material-icons">dashboard</span> Dashboard
             </a>
             <a href="{{ route('courses.index') }}" class="nav-link">
-                <span class="material-icons">fitness_center</span> Join Training
+                <span class="material-icons">fitness_center</span> Courses
             </a>
             <a href="{{ route('membership.history') }}" class="nav-link">
-                <span class="material-icons">receipt_long</span> My Payments
+                <span class="material-icons">receipt_long</span> History
             </a>
         @endif
     </div>

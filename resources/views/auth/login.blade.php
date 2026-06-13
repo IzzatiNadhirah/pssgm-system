@@ -140,7 +140,7 @@
         <img src="{{ asset('images/logo_gayong.png') }}" alt="PSSGM Logo" class="logo">
         
         <h2>Pertubuhan Silat Seni Gayong Malaysia Negeri Melaka </h2>
-        <p class="welcome-msg">Welcome</p>
+        <p class="welcome-msg">Management System</p>
 
         @if ($errors->any())
             <div class="error-box">

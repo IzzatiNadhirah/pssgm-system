@@ -149,7 +149,7 @@
                 <a href="{{ route('cawangans.index') }}" class="card-link">
                     <div class="card">
                         <span class="material-icons">domain</span>
-                        <h3>Manage Cawangan</h3>
+                        <h3>Manage Branches</h3>
                         <p>Register and configure PSSGM branches.</p>
                     </div>
                 </a>
@@ -179,8 +179,8 @@
                                 <span class="notif-dot">{{ $pendingPaymentCount }}</span>
                             @endif
                         </div>
-                        <h3>Payment Approvals</h3>
-                        <p>Review and verify manual bank transfer receipts.</p>
+                        <h3>Payment List</h3>
+                        <p>Review receipts.</p>
                     </div>
                 </a>
 

@@ -132,11 +132,17 @@
                     <div class="sub-text">View students joining your classes</div>
                 </a>
 
-                {{-- KITA EJAS SINI: Tambah Menu Bengkung Promotion --}}
                 <a href="{{ route('promotions.index') }}" class="card" style="border-bottom-color: #ff9900;">
                     <span class="material-icons" style="color: #ff9900;">military_tech</span>
                     Bengkung Promotion
                     <div class="sub-text">Request bengkung upgrade for students</div>
+                </a>
+
+                {{-- KITA EJAS SINI: Tambah Menu Kotak Kehadiran --}}
+                <a href="{{ route('attendance.index') ?? '#' }}" class="card" style="border-bottom-color: #17a2b8;">
+                    <span class="material-icons" style="color: #17a2b8;">fact_check</span>
+                    Class Attendance
+                    <div class="sub-text">Mark present & view attendance rates</div>
                 </a>
 
             </div>

@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Enrollment;
 use App\Models\Course;
 use App\Models\SessionTimetable; 
-use Illuminate\Http\Request; // Tambah Request untuk baca session_id
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EnrollmentController extends Controller
 {
-    // KITA EJAS: Tambah Request $request kat sini
     public function store(Request $request, $course_id)
     {
         $user = Auth::user();
@@ -23,51 +22,77 @@ class EnrollmentController extends Controller
         // Fetch course data
         $course = Course::findOrFail($course_id);
 
-        // 2. KITA EJAS: Baca Session ID yang spesifik dihantar dari butang Enroll
-        $session_id = $request->input('session_id');
-        
-        if (!$session_id) {
-            return redirect()->back()->with('error', 'Enrollment failed! Please select a valid class session date.');
-        }
-
-        $session = SessionTimetable::findOrFail($session_id);
-
         if (empty($course->instructor_ID)) {
             return redirect()->back()->with('error', 'Enrollment blocked! This course does not have an assigned instructor yet.');
         }
 
-        // 3. KITA EJAS: Check duplicate enrollment berdasarkan SESSION_ID, bukan lagi course_id
-        $alreadyEnrolled = Enrollment::where('user_ID', $user->user_ID)
-                                     ->where('session_ID', $session_id)
-                                     ->exists();
-
-        if ($alreadyEnrolled) {
-            return redirect()->back()->with('error', 'You are already enrolled for this specific date and time.');
+        // 2. KITA EJAS SINI: Tangkap array 'session_ids' (pukal) atau 'session_id' (single)
+        $session_ids = $request->input('session_ids');
+        if (empty($session_ids) && $request->has('session_id')) {
+            $session_ids = [$request->input('session_id')]; // Jadikan array juga supaya mudah loop
         }
 
-        // 4. KITA EJAS: Check class capacity berdasarkan SESSION_ID
-        $currentEnrolled = Enrollment::where('session_ID', $session_id)->count();
-        
-        if ($session->capacity && $currentEnrolled >= $session->capacity) {
-            return redirect()->back()->with('error', 'Sorry, this specific class session is already full!');
+        if (empty($session_ids)) {
+            return redirect()->back()->with('error', 'Enrollment failed! Please select a valid class session date.');
         }
 
-        // 5. KITA EJAS: Simpan data pendaftaran berserta session_ID
-        Enrollment::create([
-            'user_ID' => $user->user_ID,
-            'course_ID' => $course_id,
-            'session_ID' => $session_id, // <--- Wajib simpan session_ID kat database!
-            'enroll_date' => now(),
-        ]);
+        // Pembolehubah untuk simpan rekod kejayaan/kegagalan
+        $berjaya = 0;
+        $gagalPenuh = 0;
+        $gagalDuplicate = 0;
 
-        return redirect()->back()->with('success', 'Congratulations! You have successfully enrolled for the class on ' . \Carbon\Carbon::parse($session->start_time)->format('d M Y'));
+        // 3. KITA EJAS SINI: Loop pendaftaran untuk setiap ID Sesi yang dihantar
+        foreach ($session_ids as $sid) {
+            $session = SessionTimetable::find($sid);
+            if (!$session) continue;
+
+            // Check duplicate enrollment
+            $alreadyEnrolled = Enrollment::where('user_ID', $user->user_ID)
+                                         ->where('session_ID', $sid)
+                                         ->exists();
+
+            if ($alreadyEnrolled) {
+                $gagalDuplicate++;
+                continue; // Skip kelas ni, pergi kelas seterusnya
+            }
+
+            // Check class capacity
+            $currentEnrolled = Enrollment::where('session_ID', $sid)->count();
+            
+            if ($session->capacity && $currentEnrolled >= $session->capacity) {
+                $gagalPenuh++;
+                continue; // Skip kelas ni, pergi kelas seterusnya
+            }
+
+            // Simpan data pendaftaran
+            Enrollment::create([
+                'user_ID' => $user->user_ID,
+                'course_ID' => $course_id,
+                'session_ID' => $sid,
+                'enroll_date' => now(),
+            ]);
+            
+            $berjaya++;
+        }
+
+        // 4. KITA EJAS SINI: Papar mesej berdasarkan hasil Loop tadi
+        if ($berjaya > 0) {
+            $mesej = "Congratulations! You have successfully enrolled in $berjaya class session(s).";
+            
+            // Beritahu juga kalau ada kelas yang ter-skip
+            if ($gagalPenuh > 0 || $gagalDuplicate > 0) {
+                $mesej .= " (Skipped " . ($gagalPenuh + $gagalDuplicate) . " session(s) due to being full or already enrolled).";
+            }
+            return redirect()->back()->with('success', $mesej);
+        } else {
+            return redirect()->back()->with('error', 'Enrollment failed! All selected sessions were either full or you have already enrolled in them.');
+        }
     }
 
     public function myTimetable()
     {
         $user = Auth::user();
 
-        // KITA EJAS: Kena tarik data 'session' juga sebab jadual dah dipindahkan ke sana
         $enrollments = Enrollment::with(['course.instructor', 'session.gelanggang.cawangan'])
                                  ->where('user_ID', $user->user_ID)
                                  ->orderBy('created_at', 'desc')

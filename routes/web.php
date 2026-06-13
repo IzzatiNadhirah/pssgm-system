@@ -100,7 +100,7 @@ Route::middleware(['auth:staff'])->group(function () {
     Route::post('/staff/promotions/{id}/approve', [\App\Http\Controllers\PromotionController::class, 'approve'])->name('staff.promotions.approve');
     Route::post('/staff/promotions/{id}/reject', [\App\Http\Controllers\PromotionController::class, 'reject'])->name('staff.promotions.reject');
 
-    // KITA TAMBAH SINI: Route untuk Staff urus Bayaran Resit (Approve/Reject)
+    // Route untuk Staff urus Bayaran Resit (Approve/Reject)
     Route::get('/staff/payments', [\App\Http\Controllers\PaymentController::class, 'staffIndex'])->name('staff.payments.index');
     Route::post('/staff/payments/{id}/approve', [\App\Http\Controllers\PaymentController::class, 'approve'])->name('staff.payments.approve');
     Route::post('/staff/payments/{id}/reject', [\App\Http\Controllers\PaymentController::class, 'reject'])->name('staff.payments.reject');
@@ -115,6 +115,10 @@ Route::middleware(['auth:instructor'])->group(function () {
     // Route untuk Request Bengkung
     Route::get('/instructor/promotions', [\App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
     Route::post('/instructor/promotions', [\App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
+    
+    // KITA EJAS SINI: Route untuk Kehadiran (Attendance)
+    Route::get('/instructor/attendance', [\App\Http\Controllers\InstructorController::class, 'attendanceIndex'])->name('attendance.index');
+    Route::post('/instructor/attendance/store', [\App\Http\Controllers\InstructorController::class, 'storeAttendance'])->name('attendance.store');
     
     // Instructor boleh ubah jadual kursus dia sendiri
     Route::get('/courses/{id}/schedule', [CourseController::class, 'editSchedule'])->name('courses.schedule');

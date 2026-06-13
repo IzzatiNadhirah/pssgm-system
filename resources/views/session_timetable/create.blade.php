@@ -31,7 +31,7 @@
         }
         .form-control:focus { border-color: #cc0000; outline: none; box-shadow: 0 0 5px rgba(204,0,0,0.2); }
         select.form-control { cursor: pointer; }
-        input[type="datetime-local"], input[type="time"] { cursor: pointer; }
+        input[type="datetime-local"], input[type="time"], input[type="date"] { cursor: pointer; }
 
         /* Style utk kotak read-only */
         .readonly-input { background-color: #f5f5f5; color: #666; cursor: not-allowed; font-weight: bold; }
@@ -39,6 +39,18 @@
         /* GRID UNTUK MASA */
         .time-grid { display: flex; gap: 15px; }
         .time-grid .form-group { flex: 1; margin-bottom: 20px; }
+
+        /* KITA EJAS SINI: CSS untuk kotak Recurring Sessions */
+        .recurring-box {
+            background-color: #fffdf5; border: 2px dashed #ffcc00; border-radius: 8px; 
+            padding: 15px 20px; margin-bottom: 25px; transition: 0.3s;
+        }
+        .checkbox-container { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+        .checkbox-container input[type="checkbox"] { transform: scale(1.5); cursor: pointer; accent-color: #cc0000; }
+        .checkbox-container span { font-weight: bold; color: #333; font-size: 1.1em; }
+        
+        #repeat_until_container { margin-top: 15px; display: none; border-top: 1px solid #ddd; padding-top: 15px;}
+        .recurring-note { font-size: 0.85em; color: #666; font-style: italic; margin-top: 5px; }
 
         .btn-submit { 
             background-color: #cc0000; color: white; border: none; padding: 14px 24px; 
@@ -124,18 +136,34 @@
 
                 <div class="time-grid">
                     <div class="form-group">
-                        <label for="start_time">Start Date & Time:</label>
-                        <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
+                        <label for="start_time">Start Date & Time (First Class):</label>
+                        <input type="datetime-local" id="start_time" name="start_time" class="form-control" value="{{ old('start_time') }}" required>
                     </div>
                     <div class="form-group">
                         <label for="end_time">End Time:</label>
-                        <input type="time" id="end_time" name="end_time" class="form-control" required>
+                        <input type="time" id="end_time" name="end_time" class="form-control" value="{{ old('end_time') }}" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="capacity">Maximum Capacity (Pax):</label>
-                    <input type="number" id="capacity" name="capacity" class="form-control" min="1" placeholder="e.g., 30" required>
+                    <input type="number" id="capacity" name="capacity" class="form-control" min="1" placeholder="e.g., 30" value="{{ old('capacity') }}" required>
+                </div>
+
+                {{-- KITA EJAS SINI: Kotak Recurring Class (Sesi Berulang) --}}
+                <div class="recurring-box">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="repeat_weekly" name="repeat_weekly" value="1" {{ old('repeat_weekly') ? 'checked' : '' }}>
+                        <span><span class="material-icons" style="font-size: 18px; vertical-align: bottom; color: #cc0000;">autorenew</span> Repeat this class weekly?</span>
+                    </label>
+                    
+                    <div id="repeat_until_container">
+                        <label for="repeat_until">Repeat Until (Last Class Date):</label>
+                        <input type="date" id="repeat_until" name="repeat_until" class="form-control" value="{{ old('repeat_until') }}">
+                        <div class="recurring-note">
+                            * System will automatically generate weekly schedules every 7 days until this date.
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit">
@@ -154,10 +182,50 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Tetapan masa minimum (harini)
             var now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             var minDatetime = now.toISOString().slice(0, 16); 
-            document.getElementById('start_time').min = minDatetime;
+            
+            var startTimeInput = document.getElementById('start_time');
+            var repeatUntilInput = document.getElementById('repeat_until');
+            
+            if(startTimeInput) {
+                startTimeInput.min = minDatetime;
+                
+                // Pastikan tarikh repeat_until minimum adalah sehari selepas start_time
+                startTimeInput.addEventListener('change', function() {
+                    if(this.value) {
+                        var startDate = new Date(this.value);
+                        startDate.setDate(startDate.getDate() + 1); // Tambah 1 hari
+                        var minRepeatDate = startDate.toISOString().slice(0, 10);
+                        repeatUntilInput.min = minRepeatDate;
+                    }
+                });
+            }
+
+            // KITA EJAS SINI: Skrip untuk buka/tutup kotak "Repeat Until"
+            var repeatCheckbox = document.getElementById('repeat_weekly');
+            var repeatContainer = document.getElementById('repeat_until_container');
+
+            function toggleRepeatBox() {
+                if(repeatCheckbox.checked) {
+                    repeatContainer.style.display = 'block';
+                    repeatUntilInput.setAttribute('required', 'required'); // Jadikan wajib isi kalau ditandakan
+                } else {
+                    repeatContainer.style.display = 'none';
+                    repeatUntilInput.removeAttribute('required'); // Buang status wajib isi
+                    repeatUntilInput.value = ''; // Kosongkan nilainya
+                }
+            }
+
+            if(repeatCheckbox) {
+                // Semak status awal (berguna kalau user terkena error validation dan page reload)
+                toggleRepeatBox(); 
+                
+                // Dengar klik dari cikgu
+                repeatCheckbox.addEventListener('change', toggleRepeatBox);
+            }
         });
     </script>
 

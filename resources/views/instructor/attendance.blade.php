@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrolled Students - PSSGM Melaka</title>
+    <title>Class Attendance - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -14,13 +14,13 @@
         .content-area { padding: 40px 20px; display: flex; justify-content: center; }
         
         .container { 
-            max-width: 1000px; width: 100%; background: white; padding: 35px; 
+            max-width: 1100px; width: 100%; background: white; padding: 35px; 
             border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
+            border-top: 8px solid #17a2b8; border-bottom: 8px solid #ffcc00; 
         }
         
         .header-area { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
-        .header-area .material-icons { font-size: 36px; color: #cc0000; }
+        .header-area .material-icons { font-size: 36px; color: #17a2b8; }
         h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 1px; }
         
         .course-section { margin-bottom: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
@@ -28,7 +28,7 @@
         .course-header { 
             background: #111; color: #ffcc00; padding: 15px 20px; font-size: 1.1em; font-weight: bold; 
             display: flex; justify-content: space-between; align-items: center; 
-            border-left: 4px solid #cc0000; cursor: pointer; transition: background 0.3s;
+            border-left: 4px solid #17a2b8; cursor: pointer; transition: background 0.3s;
         }
         .course-header:hover { background: #222; }
         
@@ -38,38 +38,43 @@
         .course-body { display: none; padding: 15px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95em; vertical-align: middle; }
         th { background-color: #111; color: #ffcc00; font-weight: bold; text-transform: uppercase; font-size: 0.85em; cursor: pointer; }
         tr:hover { background-color: #fffdf5; }
 
         .empty-state { text-align: center; padding: 30px; color: #888; font-style: italic; }
         
-        .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: left; }
-        .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .back-link:hover { transform: translateX(-5px); color: #111; }
-
-        /* --- STYLES UNTUK BORANG KEHADIRAN --- */
-        .attendance-controls { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding: 15px; background: #fffdf5; border: 1px solid #ffcc00; border-radius: 8px; }
-        .attendance-controls label { font-weight: bold; color: #111; display: block; margin-bottom: 5px; font-size: 0.9em; text-transform: uppercase; }
-        .attendance-controls input[type="date"] { padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 1em; outline: none; transition: 0.2s; }
-        .attendance-controls input[type="date"]:focus { border-color: #cc0000; }
+        .attendance-controls { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-top: 15px; padding: 15px; background: #e0f7fa; 
+            border: 1px solid #17a2b8; border-radius: 8px; flex-wrap: wrap; gap: 15px;
+        }
+        .attendance-controls input[type="date"] { 
+            padding: 10px; border: 2px solid #b8daff; border-radius: 6px; 
+            font-family: inherit; font-size: 0.95em; outline: none; transition: 0.2s; background: white;
+        }
+        .attendance-controls input[type="date"]:focus { border-color: #17a2b8; }
         
-        .btn-save-attendance { background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 1em; transition: 0.2s; text-transform: uppercase; }
+        .btn-save-attendance { 
+            background-color: #28a745; color: white; border: none; padding: 10px 20px; 
+            border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; 
+            align-items: center; gap: 8px; font-size: 1em; transition: 0.2s; text-transform: uppercase; margin: 0;
+        }
         .btn-save-attendance:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(40,167,69,0.3); }
 
-        .custom-checkbox { transform: scale(1.5); cursor: pointer; accent-color: #28a745; }
+        .custom-checkbox { transform: scale(1.6); cursor: pointer; accent-color: #28a745; }
+        
+        .attendance-badge { background: #17a2b8; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
 
-        /* Datatables Overrides */
+        .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: left; }
+        .back-link { color: #17a2b8; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .back-link:hover { transform: translateX(-5px); color: #111; }
+
         .dataTables_wrapper .dataTables_filter input { border: 2px solid #eee; border-radius: 6px; padding: 5px 10px; outline: none; background: white; }
-        .dataTables_wrapper .dataTables_filter input:focus { border-color: #cc0000; }
-        .dataTables_wrapper .dataTables_length select { border: 2px solid #eee; border-radius: 6px; padding: 5px; background: white; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #ffcc00 !important; color: #111 !important; border: none; font-weight: bold; border-radius: 6px; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #111 !important; color: #ffcc00 !important; border: none; border-radius: 6px; }
-        .dataTables_wrapper .dataTables_info { font-size: 0.9em; color: #666; }
-
+        .dataTables_wrapper .dataTables_filter input:focus { border-color: #17a2b8; }
         .dt-buttons { margin-bottom: 15px; }
-        .dt-button.btn-print { background: #cc0000 !important; color: white !important; border: none !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: bold !important; transition: 0.2s !important; }
-        .dt-button.btn-print:hover { background: #aa0000 !important; transform: translateY(-2px); }
+        .dt-button.btn-print { background: #17a2b8 !important; color: white !important; border: none !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: bold !important; transition: 0.2s !important; }
+        .dt-button.btn-print:hover { background: #138496 !important; transform: translateY(-2px); }
 
         .alert-box { width: 100%; box-sizing: border-box; margin-bottom: 20px;}
         .alert { padding: 15px; border-radius: 8px; font-weight: bold; }
@@ -86,8 +91,6 @@
             .course-body { display: block !important; padding: 0 !important;} 
             th { background-color: #f1f1f1 !important; color: black !important; border-bottom: 2px solid black !important; }
             td { color: black !important; border-bottom: 1px solid #ccc !important; }
-            
-            /* Sembunyikan kolum checkbox masa print */
             th.no-print, td.no-print { display: none !important; }
         }
     </style>
@@ -100,8 +103,8 @@
         <div class="container">
             
             <div class="header-area">
-                <span class="material-icons">groups</span>
-                <h2>Enrolled Students & Attendance</h2>
+                <span class="material-icons">fact_check</span>
+                <h2>Class Attendance Management</h2>
             </div>
 
             @if(session('success'))
@@ -124,22 +127,23 @@
                 @foreach($courses as $course)
                     
                     @php
-                        $sessions = \App\Models\SessionTimetable::with('gelanggang')->where('course_ID', $course->course_ID ?? $course->id)->get();
+                        // KITA EJAS SINI: Tambah orderBy('start_time', 'desc') untuk susun tarikh terkini di atas
+                        $sessions = \App\Models\SessionTimetable::with('gelanggang')
+                                        ->where('course_ID', $course->course_ID ?? $course->id)
+                                        ->orderBy('start_time', 'desc')
+                                        ->get();
                     @endphp
 
                     @if($sessions->isEmpty())
                         <div class="course-section">
-                            <div class="course-header" title="Click to expand">
+                            <div class="course-header">
                                 <div>
                                     <span class="material-icons" style="vertical-align: bottom; font-size: 20px; margin-right: 5px;">menu_book</span>
                                     {{ $course->course_type }}
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <span style="font-size: 0.85em; background: #333; padding: 4px 10px; border-radius: 12px; color: white;">Total Enrolled: 0</span>
-                                    <span class="material-icons toggle-icon">expand_more</span>
-                                </div>
+                                <span style="font-size: 0.85em; background: #333; padding: 4px 10px; border-radius: 12px; color: white;">No Sessions</span>
                             </div>
-                            <div class="course-body">
+                            <div class="course-body" style="display: block;">
                                 <div class="empty-state">No class schedules have been set for this course yet.</div>
                             </div>
                         </div>
@@ -152,7 +156,7 @@
                             @endphp
 
                             <div class="course-section">
-                                <div class="course-header" title="Click to view students & take attendance">
+                                <div class="course-header" title="Click to expand & mark attendance">
                                     <div style="flex: 1;">
                                         <span class="material-icons" style="vertical-align: text-bottom; font-size: 20px; margin-right: 5px;">menu_book</span>
                                         {{ $course->course_type }}
@@ -173,25 +177,12 @@
 
                                 <div class="course-body">
                                     @if($enrollments->isEmpty())
-                                        <div class="empty-state">No students have enrolled in this specific class yet.</div>
+                                        <div class="empty-state">No students have enrolled in this class yet.</div>
                                     @else
                                         
-                                        {{-- KITA EJAS SINI: Borang Kehadiran bermula di sini --}}
                                         <form action="{{ route('attendance.store') }}" method="POST">
                                             @csrf
                                             <input type="hidden" name="session_id" value="{{ $sesi_id }}">
-
-                                            <div class="attendance-controls">
-                                                <div>
-                                                    <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">event</span> Select Class Date</label>
-                                                    <input type="date" name="attendance_date" value="{{ date('Y-m-d') }}" required>
-                                                </div>
-                                                <div>
-                                                    <button type="submit" class="btn-save-attendance">
-                                                        <span class="material-icons">how_to_reg</span> Save Attendance
-                                                    </button>
-                                                </div>
-                                            </div>
 
                                             <div style="overflow-x: auto; background: white; border-radius: 8px;">
                                                 <table class="dataTable" data-course="{{ $course->course_type }} ({{ $sesi->gelanggang->gel_name ?? 'Class' }})">
@@ -199,26 +190,62 @@
                                                         <tr>
                                                             <th style="width: 50px;">No.</th>
                                                             <th>Student Name</th>
-                                                            <th>Bengkung Level</th>
+                                                            <th style="text-align: center;">Total Attended</th>
                                                             <th class="no-print" style="text-align: center; color: #28a745; width: 100px;">Present?</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         @foreach($enrollments as $index => $enrollment)
+                                                        @php
+                                                            $user_id = $enrollment->user->user_ID ?? $enrollment->user->id;
+                                                            
+                                                            $total_attended = \App\Models\Attendance::where('session_id', $sesi_id)
+                                                                                ->where('user_id', $user_id)
+                                                                                ->where('status', 'Hadir')
+                                                                                ->count();
+                                                                                
+                                                            $has_attended_today = \App\Models\Attendance::where('session_id', $sesi_id)
+                                                                                ->where('user_id', $user_id)
+                                                                                ->where('date', date('Y-m-d'))
+                                                                                ->where('status', 'Hadir')
+                                                                                ->exists();
+                                                        @endphp
                                                         <tr>
                                                             <td>{{ $index + 1 }}</td>
-                                                            <td><b>{{ $enrollment->user->name ?? 'Unknown Student' }}</b></td>
-                                                            <td>{{ $enrollment->user->bengkung_level ?? 'N/A' }}</td>
+                                                            <td>
+                                                                <b>{{ $enrollment->user->name ?? 'Unknown Student' }}</b><br>
+                                                                <span style="font-size: 0.8em; color: #666;">Bengkung: {{ $enrollment->user->bengkung_level ?? 'N/A' }}</span>
+                                                            </td>
+                                                            <td style="text-align: center;">
+                                                                <span class="attendance-badge">{{ $total_attended }} Classes</span>
+                                                            </td>
                                                             
-                                                            {{-- CHECKBOX KEHADIRAN --}}
-                                                            <td class="no-print" style="text-align: center; vertical-align: middle;">
-                                                                <input type="checkbox" name="attendance[]" value="{{ $enrollment->user->user_ID ?? $enrollment->user->id }}" class="custom-checkbox">
+                                                            <td class="no-print" style="text-align: center;">
+                                                                <input type="checkbox" name="attendance[]" value="{{ $user_id }}" class="custom-checkbox" title="Tick if present" {{ $has_attended_today ? 'checked' : '' }}>
                                                             </td>
                                                         </tr>
                                                         @endforeach
                                                     </tbody>
                                                 </table>
                                             </div>
+
+                                            <div class="attendance-controls">
+                                                <div style="flex-grow: 1;">
+                                                    <p style="margin: 0; font-size: 0.85em; color: #0c5460; font-style: italic;">
+                                                        * Tick the box for students who are present. Leave blank if absent.
+                                                    </p>
+                                                </div>
+                                                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                                        <label style="margin:0; font-size:0.9em; font-weight:bold; color:#0c5460;">Date:</label>
+                                                        <input type="date" name="attendance_date" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}" required>
+                                                    </div>
+                                                    <button type="submit" class="btn-save-attendance">
+                                                        <span class="material-icons">how_to_reg</span> Save Attendance
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
                                         </form>
 
                                     @endif
@@ -245,8 +272,6 @@
 
     <script>
         $(document).ready(function() {
-            
-            // ACCORDION SCRIPT
             $('.course-header').on('click', function() {
                 var body = $(this).next('.course-body');
                 var icon = $(this).find('.toggle-icon');
@@ -254,18 +279,14 @@
                 body.slideToggle(300, function() {
                     $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
                 });
-                
                 icon.toggleClass('open');
             });
 
-            // DATATABLES SCRIPT 
-            // PENTING: Untuk form attendance berfungsi dengan baik bila ada banyak data (lebih dari 1 page), 
-            // kita matikan pagination (paging: false) supaya bila submit, SEMUA checkbox dihantar.
             $('.dataTable').each(function() {
                 var courseName = $(this).data('course'); 
                 
                 $(this).DataTable({
-                    "paging": false, // Matikan page 1, 2, 3 supaya bila save attendance, semua budak direkodkan
+                    "paging": false, 
                     "info": false,
                     "language": {
                         "search": "Search Student:"
@@ -277,9 +298,9 @@
                             extend: 'print',
                             text: '<span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">print</span> Print List',
                             className: 'btn-print',
-                            title: 'Enrolled Students List - ' + courseName, 
+                            title: 'Attendance List - ' + courseName, 
                             exportOptions: {
-                                columns: [0, 1, 2] // Jangan print column ke-4 (checkbox)
+                                columns: [0, 1] 
                             }
                         }
                     ]
