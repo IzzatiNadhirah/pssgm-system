@@ -42,7 +42,11 @@ Route::middleware(['auth:web,staff,instructor'])->group(function () {
     
     Route::resource('memberships', MembershipController::class);
     Route::get('/membership/history', [MembershipController::class, 'history'])->name('membership.history'); 
+    
     Route::resource('payments', PaymentController::class);
+    
+    // Tambah laluan khas 'payment.store' supaya selari dengan form Blade
+    Route::post('/payment', [PaymentController::class, 'store'])->name('payment.store');
 });
 
 // --- MEMBER ONLY ---
@@ -74,7 +78,8 @@ Route::middleware(['auth:staff'])->group(function () {
                 'countInstructors' => \App\Models\Instructor::count(),
                 'countStaffs' => \App\Models\Staff::count(),
                 'totalGelanggang' => \App\Models\Gelanggang::where('status', 'approved')->count(),
-                'totalFees' => \App\Models\Payment::sum('amount')
+                // KITA EJAS SINI: Cuma kira yang Approved sahaja
+                'totalFees' => \App\Models\Payment::where('payment_status', 'Approved')->sum('amount')
             ]);
         }
         $myCawangan = \App\Models\Cawangan::where('staff_ID', $staff->staff_ID ?? $staff->id)->first();
@@ -116,7 +121,7 @@ Route::middleware(['auth:instructor'])->group(function () {
     Route::get('/instructor/promotions', [\App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
     Route::post('/instructor/promotions', [\App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     
-    // KITA EJAS SINI: Route untuk Kehadiran (Attendance)
+    // Route untuk Kehadiran (Attendance)
     Route::get('/instructor/attendance', [\App\Http\Controllers\InstructorController::class, 'attendanceIndex'])->name('attendance.index');
     Route::post('/instructor/attendance/store', [\App\Http\Controllers\InstructorController::class, 'storeAttendance'])->name('attendance.store');
     

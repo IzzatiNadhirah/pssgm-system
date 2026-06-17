@@ -10,11 +10,19 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
+        /* Seragamkan font tapi kecualikan Material Icons */
+        body, button, input, select, textarea, table, th, td, div, a, p, h1, h2, h3, h4, h5, h6 { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; 
+        }
+        .material-icons {
+            font-family: 'Material Icons' !important; 
+        }
+
+        body { background-color: #111; margin: 0; min-height: 100vh; }
         .content-area { padding: 40px 20px; display: flex; justify-content: center; }
         
         .container { 
-            max-width: 1000px; width: 100%; background: white; padding: 35px; 
+            max-width: 1100px; width: 100%; background: white; padding: 35px; 
             border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
         }
@@ -48,16 +56,7 @@
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .back-link:hover { transform: translateX(-5px); color: #111; }
 
-        /* --- STYLES UNTUK BORANG KEHADIRAN --- */
-        .attendance-controls { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding: 15px; background: #fffdf5; border: 1px solid #ffcc00; border-radius: 8px; }
-        .attendance-controls label { font-weight: bold; color: #111; display: block; margin-bottom: 5px; font-size: 0.9em; text-transform: uppercase; }
-        .attendance-controls input[type="date"] { padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 1em; outline: none; transition: 0.2s; }
-        .attendance-controls input[type="date"]:focus { border-color: #cc0000; }
-        
-        .btn-save-attendance { background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 1em; transition: 0.2s; text-transform: uppercase; }
-        .btn-save-attendance:hover { background-color: #218838; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(40,167,69,0.3); }
-
-        .custom-checkbox { transform: scale(1.5); cursor: pointer; accent-color: #28a745; }
+        .attendance-badge { background: #cc0000; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
 
         /* Datatables Overrides */
         .dataTables_wrapper .dataTables_filter input { border: 2px solid #eee; border-radius: 6px; padding: 5px 10px; outline: none; background: white; }
@@ -71,24 +70,16 @@
         .dt-button.btn-print { background: #cc0000 !important; color: white !important; border: none !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: bold !important; transition: 0.2s !important; }
         .dt-button.btn-print:hover { background: #aa0000 !important; transform: translateY(-2px); }
 
-        .alert-box { width: 100%; box-sizing: border-box; margin-bottom: 20px;}
-        .alert { padding: 15px; border-radius: 8px; font-weight: bold; }
-        .alert-success { background: #d4edda; color: #155724; border-left: 5px solid #28a745; }
-        .alert-error { background: #f8d7da; color: #721c24; border-left: 5px solid #dc3545; }
-
         @media print {
             body { background-color: white !important; color: black !important; }
             .content-area { padding: 0 !important; }
             .container { box-shadow: none !important; border: none !important; max-width: 100% !important; padding: 0 !important; }
-            .footer-nav, .dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_paginate, .dt-buttons, .attendance-controls, .btn-save-attendance { display: none !important; }
+            .footer-nav, .dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_paginate, .dt-buttons { display: none !important; }
             .course-header { border-left: none !important; background-color: #f1f1f1 !important; color: #111 !important; }
             .course-header span { background-color: transparent !important; color: #111 !important; }
             .course-body { display: block !important; padding: 0 !important;} 
             th { background-color: #f1f1f1 !important; color: black !important; border-bottom: 2px solid black !important; }
             td { color: black !important; border-bottom: 1px solid #ccc !important; }
-            
-            /* Sembunyikan kolum checkbox masa print */
-            th.no-print, td.no-print { display: none !important; }
         }
     </style>
 </head>
@@ -101,19 +92,8 @@
             
             <div class="header-area">
                 <span class="material-icons">groups</span>
-                <h2>Enrolled Students & Attendance</h2>
+                <h2>Enrolled Students List</h2>
             </div>
-
-            @if(session('success'))
-                <div class="alert-box">
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="alert-box">
-                    <div class="alert alert-error">{{ session('error') }}</div>
-                </div>
-            @endif
 
             @if($courses->isEmpty())
                 <div class="empty-state" style="border: 2px dashed #ddd; border-radius: 8px; padding: 50px;">
@@ -124,10 +104,26 @@
                 @foreach($courses as $course)
                     
                     @php
-                        $sessions = \App\Models\SessionTimetable::with('gelanggang')->where('course_ID', $course->course_ID ?? $course->id)->get();
+                        $sessions = \App\Models\SessionTimetable::with('gelanggang')
+                                        ->where('course_ID', $course->course_ID ?? $course->id)
+                                        ->orderBy('start_time', 'desc')
+                                        ->get();
+                                        
+                        // Kelompokkan (Group) jadual ikut Gelanggang + Waktu Dibuat
+                        $groupedSessions = [];
+                        foreach($sessions as $sesi) {
+                            $gelId = $sesi->gel_ID ?? ($sesi->gelanggang ? $sesi->gelanggang->id : 'none');
+                            $createdAtStamp = $sesi->created_at ? \Carbon\Carbon::parse($sesi->created_at)->format('Ymd_His') : 'manual';
+                            $groupKey = "{$gelId}_{$createdAtStamp}";
+                            
+                            if(!isset($groupedSessions[$groupKey])) {
+                                $groupedSessions[$groupKey] = [];
+                            }
+                            $groupedSessions[$groupKey][] = $sesi;
+                        }
                     @endphp
 
-                    @if($sessions->isEmpty())
+                    @if(empty($groupedSessions))
                         <div class="course-section">
                             <div class="course-header" title="Click to expand">
                                 <div>
@@ -145,22 +141,48 @@
                         </div>
                     @else
                         
-                        @foreach($sessions as $sesi)
+                        @foreach($groupedSessions as $groupKey => $group)
                             @php
-                                $sesi_id = $sesi->session_ID ?? $sesi->id;
-                                $enrollments = \App\Models\Enrollment::with('user')->where('session_ID', $sesi_id)->get();
+                                // Susun jadual mengikut kronologi
+                                usort($group, function($a, $b) { return strtotime($a->start_time) <=> strtotime($b->start_time); });
+                                
+                                $firstSesi = $group[0];
+                                $lastSesi = $group[count($group) - 1];
+                                $sessionCount = count($group);
+                                $isWeekly = $sessionCount > 1;
+                                
+                                $hari = \Carbon\Carbon::parse($firstSesi->start_time)->format('l');
+                                $tarikhMula = \Carbon\Carbon::parse($firstSesi->start_time)->format('d M Y');
+                                $tarikhAkhir = \Carbon\Carbon::parse($lastSesi->start_time)->format('d M Y');
+                                $masaMula = \Carbon\Carbon::parse($firstSesi->start_time)->format('h:i A');
+                                
+                                // Gabungkan semua ID sesi dalam kumpulan ni
+                                $all_session_ids = array_map(function($s) { return $s->session_ID ?? $s->id; }, $group);
+                                
+                                // Tarik pendaftaran berdasarkan ID Sesi Pertama
+                                $first_session_id = $firstSesi->session_ID ?? $firstSesi->id;
+                                $enrollments = \App\Models\Enrollment::with('user')->where('session_ID', $first_session_id)->get();
                             @endphp
 
                             <div class="course-section">
-                                <div class="course-header" title="Click to view students & take attendance">
+                                <div class="course-header" title="Click to view students list">
                                     <div style="flex: 1;">
                                         <span class="material-icons" style="vertical-align: text-bottom; font-size: 20px; margin-right: 5px;">menu_book</span>
                                         {{ $course->course_type }}
                                         
                                         <div style="margin-top: 5px; font-size: 0.85em; color: #ddd; font-weight: normal; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                                            <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">location_on</span> {{ $sesi->gelanggang->gel_name ?? 'TBA' }}</span>
+                                            <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">location_on</span> {{ $firstSesi->gelanggang->gel_name ?? 'TBA' }}</span>
                                             <span style="color:#666;">|</span>
-                                            <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">schedule</span> {{ \Carbon\Carbon::parse($sesi->start_time)->format('l, d M Y (h:i A)') }}</span>
+                                            @if($isWeekly)
+                                                <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">autorenew</span> Every {{ $hari }}</span>
+                                                <span style="color:#666;">|</span>
+                                                <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">date_range</span> {{ $tarikhMula }} - {{ $tarikhAkhir }}</span>
+                                                <span style="color:#ffcc00; font-weight: bold;">({{ $sessionCount }} Classes)</span>
+                                            @else
+                                                <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">calendar_today</span> {{ $tarikhMula }}</span>
+                                            @endif
+                                            <span style="color:#666;">|</span>
+                                            <span><span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">schedule</span> {{ $masaMula }}</span>
                                         </div>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 15px;">
@@ -176,50 +198,39 @@
                                         <div class="empty-state">No students have enrolled in this specific class yet.</div>
                                     @else
                                         
-                                        {{-- KITA EJAS SINI: Borang Kehadiran bermula di sini --}}
-                                        <form action="{{ route('attendance.store') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="session_id" value="{{ $sesi_id }}">
-
-                                            <div class="attendance-controls">
-                                                <div>
-                                                    <label><span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">event</span> Select Class Date</label>
-                                                    <input type="date" name="attendance_date" value="{{ date('Y-m-d') }}" required>
-                                                </div>
-                                                <div>
-                                                    <button type="submit" class="btn-save-attendance">
-                                                        <span class="material-icons">how_to_reg</span> Save Attendance
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div style="overflow-x: auto; background: white; border-radius: 8px;">
-                                                <table class="dataTable" data-course="{{ $course->course_type }} ({{ $sesi->gelanggang->gel_name ?? 'Class' }})">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style="width: 50px;">No.</th>
-                                                            <th>Student Name</th>
-                                                            <th>Bengkung Level</th>
-                                                            <th class="no-print" style="text-align: center; color: #28a745; width: 100px;">Present?</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach($enrollments as $index => $enrollment)
-                                                        <tr>
-                                                            <td>{{ $index + 1 }}</td>
-                                                            <td><b>{{ $enrollment->user->name ?? 'Unknown Student' }}</b></td>
-                                                            <td>{{ $enrollment->user->bengkung_level ?? 'N/A' }}</td>
-                                                            
-                                                            {{-- CHECKBOX KEHADIRAN --}}
-                                                            <td class="no-print" style="text-align: center; vertical-align: middle;">
-                                                                <input type="checkbox" name="attendance[]" value="{{ $enrollment->user->user_ID ?? $enrollment->user->id }}" class="custom-checkbox">
-                                                            </td>
-                                                        </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </form>
+                                        <div style="overflow-x: auto; background: white; border-radius: 8px;">
+                                            <table class="dataTable" data-course="{{ $course->course_type }} ({{ $firstSesi->gelanggang->gel_name ?? 'Class' }})">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 50px;">No.</th>
+                                                        <th>Student Name</th>
+                                                        <th>Bengkung Level</th>
+                                                        <th style="text-align: center;">Overall Attendance</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($enrollments as $index => $enrollment)
+                                                    @php
+                                                        $user_id = $enrollment->user->user_ID ?? $enrollment->user->id;
+                                                        
+                                                        // Pengiraan jumlah hadir mengambil kira semua jadual dalam kumpulan (group) ini
+                                                        $total_attended = \App\Models\Attendance::whereIn('session_id', $all_session_ids)
+                                                                                        ->where('user_id', $user_id)
+                                                                                        ->where('status', 'Hadir')
+                                                                                        ->count();
+                                                    @endphp
+                                                    <tr>
+                                                        <td>{{ $index + 1 }}</td>
+                                                        <td><b>{{ $enrollment->user->name ?? 'Unknown Student' }}</b></td>
+                                                        <td>{{ $enrollment->user->bengkung_level ?? 'N/A' }}</td>
+                                                        <td style="text-align: center;">
+                                                            <span class="attendance-badge">{{ $total_attended }} / {{ $sessionCount }}</span>
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
 
                                     @endif
                                 </div>
@@ -259,14 +270,13 @@
             });
 
             // DATATABLES SCRIPT 
-            // PENTING: Untuk form attendance berfungsi dengan baik bila ada banyak data (lebih dari 1 page), 
-            // kita matikan pagination (paging: false) supaya bila submit, SEMUA checkbox dihantar.
             $('.dataTable').each(function() {
                 var courseName = $(this).data('course'); 
                 
                 $(this).DataTable({
-                    "paging": false, // Matikan page 1, 2, 3 supaya bila save attendance, semua budak direkodkan
-                    "info": false,
+                    "paging": true, // Boleh hidupkan balik pagination sebab ni cuma paparan Roster
+                    "pageLength": 25,
+                    "info": true,
                     "language": {
                         "search": "Search Student:"
                     },
@@ -279,7 +289,7 @@
                             className: 'btn-print',
                             title: 'Enrolled Students List - ' + courseName, 
                             exportOptions: {
-                                columns: [0, 1, 2] // Jangan print column ke-4 (checkbox)
+                                columns: [0, 1, 2, 3] 
                             }
                         }
                     ]

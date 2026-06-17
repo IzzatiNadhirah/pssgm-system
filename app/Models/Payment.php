@@ -21,18 +21,16 @@ class Payment extends Model
         'amount',
         'payment_date',
         'payment_status',
-        'receipt_path', // Ready for your future QR scan/upload!
+        'receipt_path', 
         'member_ID',
     ];
 
     // ==========================================================
-    // KITA EJAS SINI: Tukar 'id' jadi 'user_ID'
+    // KITA EJAS SINI: Payment berhubung dengan jadual Membership
     // ==========================================================
-    public function user()
+    public function membership()
     {
-        // Parameter 1: Model yang nak dihubungkan (User)
-        // Parameter 2: Foreign key dalam table payment (member_ID)
-        // Parameter 3: Primary key sebenar dalam table users (user_ID)
-        return $this->belongsTo(User::class, 'member_ID', 'user_ID');
+        // Hubungkan kolum 'member_ID' (Payment) kepada 'member_ID' (Membership)
+        return $this->belongsTo(Membership::class, 'member_ID', 'member_ID');
     }
 }

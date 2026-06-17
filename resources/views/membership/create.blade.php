@@ -6,7 +6,13 @@
     <title>Membership & Payment - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
+        body, button, input, select, textarea, span, div, a, p, h1, h2, h3, h4, h5, h6 { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; 
+        }
+        .material-icons {
+            font-family: 'Material Icons' !important; 
+        }
+        body { background-color: #111; margin: 0; min-height: 100vh; }
 
         /* --- NAVIGATION BAR --- */
         .navbar {
@@ -26,7 +32,6 @@
 
         .nav-center { display: flex; gap: 20px; }
         
-        /* FIX WARNA UNGU */
         .nav-link {
             color: white !important; 
             text-decoration: none !important;
@@ -89,37 +94,7 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <img src="{{ asset('images/logo_gayong.png') }}" class="nav-logo-small" alt="PSSGM">
-            <span>PSSGM MELAKA</span>
-        </div>
-
-        <div class="nav-center">
-            <a href="{{ route('dashboard') }}" class="nav-link">
-                <span class="material-icons">dashboard</span> Dashboard
-            </a>
-            <a href="{{ route('courses.index') }}" class="nav-link">
-                <span class="material-icons">fitness_center</span> Courses
-            </a>
-            <a href="{{ route('membership.history') }}" class="nav-link">
-                <span class="material-icons">receipt_long</span> History
-            </a>
-        </div>
-
-        <div class="nav-right">
-            <div class="user-meta">
-                <span class="user-name">{{ Auth::user()->name }}</span>
-                <span class="user-role">Active</span>
-            </div>
-            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
-                @csrf
-                <button type="submit" class="btn-logout-nav">
-                    <span class="material-icons" style="font-size: 18px;">logout</span> Logout
-                </button>
-            </form>
-        </div>
-    </nav>
+    @include('layouts.navbar')
 
     <div class="content-area">
         <div class="container">
@@ -140,8 +115,8 @@
                 </div>
             @endif
 
-            {{-- 1. WAJIB TAMBAH enctype="multipart/form-data" UNTUK UPLOAD GAMBAR/PDF --}}
-            <form action="{{ route('memberships.store') }}" method="POST" enctype="multipart/form-data">
+            {{-- Borang dah sempurna ada enctype. KITA EJAS SINI: Pastikan dia hantar ke laluan controller bayaran yang tepat --}}
+            <form action="{{ route('payment.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf 
 
                 <h3><span class="material-icons">person</span> Section 1: Member Profile</h3>
@@ -175,7 +150,7 @@
                     </p>
                 </div>
 
-                {{-- 2. RUANGAN UPLOAD RESIT (Disembunyikan pada awalnya) --}}
+                {{-- RUANGAN UPLOAD RESIT (Disembunyikan pada awalnya) --}}
                 <div class="form-group" id="receipt-section" style="display: none; background: #fafafa; padding: 20px; border-radius: 8px; border: 2px dashed #ddd;">
                     <label style="color: #cc0000; display: flex; align-items: center; gap: 5px;">
                         <span class="material-icons" style="font-size: 18px;">receipt</span> Upload Payment Receipt

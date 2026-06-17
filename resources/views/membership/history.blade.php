@@ -8,81 +8,6 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; margin: 0; min-height: 100vh; }
         
-        /* --- NAVIGATION BAR --- */
-        .navbar {
-            background-color: #000;
-            padding: 10px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #ffcc00; /* Gold Line */
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        .nav-logo-small { width: 40px; height: auto; }
-
-        .nav-center {
-            display: flex;
-            gap: 20px;
-        }
-
-        /* FIX WARNA UNGU: Paksa warna putih dan buang visited style */
-        .nav-link {
-            color: white !important; 
-            text-decoration: none !important;
-            font-size: 0.9em;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: 0.3s;
-        }
-
-        .nav-link:hover { color: #ffcc00 !important; }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-meta {
-            text-align: right;
-            color: white;
-            line-height: 1.2;
-        }
-
-        .user-meta .user-name { display: block; font-size: 0.9em; font-weight: bold; }
-        .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; }
-
-        .btn-logout-nav {
-            background-color: #cc0000;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .btn-logout-nav:hover { background-color: #ff0000; }
-
         /* --- CONTENT AREA --- */
         .content-area { padding: 40px 20px; display: flex; justify-content: center; }
         .container { 
@@ -97,7 +22,11 @@
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background-color: #111; color: #ffcc00; text-transform: uppercase; font-size: 0.85em; }
         
-        .status-paid { background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        /* --- KITA EJAS SINI: Tambah pelbagai warna status --- */
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; }
+        .status-paid, .status-approved { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
         
         .empty-state { text-align: center; padding: 40px; color: #888; }
         .back-nav { margin-top: 30px; }
@@ -107,37 +36,7 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <img src="{{ asset('images/logo_gayong.png') }}" class="nav-logo-small" alt="PSSGM">
-            <span>PSSGM MELAKA</span>
-        </div>
-
-        <div class="nav-center">
-            <a href="{{ route('dashboard') }}" class="nav-link">
-                <span class="material-icons">dashboard</span> Dashboard
-            </a>
-            <a href="{{ route('courses.index') }}" class="nav-link">
-                <span class="material-icons">fitness_center</span> Courses
-            </a>
-            <a href="{{ route('membership.history') }}" class="nav-link" style="color: #ffcc00 !important;">
-                <span class="material-icons">receipt_long</span> History
-            </a>
-        </div>
-
-        <div class="nav-right">
-            <div class="user-meta">
-                <span class="user-name">{{ Auth::user()->name }}</span>
-                <span class="user-role">Active</span>
-            </div>
-            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
-                @csrf
-                <button type="submit" class="btn-logout-nav">
-                    <span class="material-icons" style="font-size: 18px;">logout</span> Logout
-                </button>
-            </form>
-        </div>
-    </nav>
+    @include('layouts.navbar')
 
     <div class="content-area">
         <div class="container">
@@ -164,9 +63,22 @@
                         @foreach($payments as $payment)
                         <tr>
                             <td style="font-weight: 500;">{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M Y') }}</td>
-                            <td><code style="background: #f4f4f4; padding: 4px 8px; border-radius: 4px; color: #444;">{{ $payment->payment_code }}</code></td>
+                            
+                            {{-- KITA EJAS SINI: Buang tag <code>, biarkan teks biasa je --}}
+                            <td>{{ $payment->payment_code }}</td>
+                            
                             <td><b>RM {{ number_format($payment->amount, 2) }}</b></td>
-                            <td><span class="status-paid">Paid</span></td>
+                            <td>
+                                @if($payment->payment_status == 'Pending Verification' || $payment->payment_status == 'Pending')
+                                    <span class="status-badge status-pending">Pending</span>
+                                @elseif($payment->payment_status == 'Approved' || $payment->payment_status == 'Paid')
+                                    <span class="status-badge status-approved">Approved</span>
+                                @elseif($payment->payment_status == 'Rejected')
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                @else
+                                    <span class="status-badge" style="background: #eee; color: #333;">{{ $payment->payment_status }}</span>
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>

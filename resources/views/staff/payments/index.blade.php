@@ -95,7 +95,8 @@
                                     <b style="font-family: monospace; color: #cc0000; font-size: 1.1em;">{{ $payment->payment_code }}</b>
                                 </td>
                                 <td>
-                                    <b>{{ $payment->user->name ?? 'Unknown Student' }}</b><br>
+                                    {{-- KITA EJAS SINI: Panggil user melalui laluan membership untuk dapatkan nama yang tepat --}}
+                                    <b>{{ $payment->membership?->user?->name ?? 'Unknown Student' }}</b><br>
                                     <span style="font-size: 0.85em; color: #666;">ID: {{ $payment->member_ID }}</span>
                                 </td>
                                 <td>

@@ -98,7 +98,7 @@
             <a href="{{ route('courses.index') }}" class="nav-link">
                 <span class="material-icons">menu_book</span> My Courses
             </a>
-            <a href="#" class="nav-link">
+            <a href="{{ route('attendance.index') }}" class="nav-link">
                 <span class="material-icons">fact_check</span> Attendance
             </a>
 
@@ -109,6 +109,12 @@
             <a href="{{ route('courses.index') }}" class="nav-link">
                 <span class="material-icons">fitness_center</span> Courses
             </a>
+            
+            {{-- KITA EJAS SINI: Tambah link My Timetable untuk User Biasa --}}
+            <a href="{{ route('timetable.index') }}" class="nav-link">
+                <span class="material-icons">event_note</span> My Timetable
+            </a>
+            
             <a href="{{ route('membership.history') }}" class="nav-link">
                 <span class="material-icons">receipt_long</span> History
             </a>
@@ -131,7 +137,7 @@
             }
         @endphp
 
-        {{-- KITA EJAS SINI: Paparan berbeza untuk Ahli (Boleh klik) vs Staf/Cikgu (Statik) --}}
+        {{-- Paparan berbeza untuk Ahli (Boleh klik) vs Staf/Cikgu (Statik) --}}
         @if($isMember)
             <a href="{{ route('profile.edit') }}" class="profile-link" title="Manage My Profile">
                 <div class="user-meta">
