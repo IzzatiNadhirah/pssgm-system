@@ -41,7 +41,7 @@
 
         /* --- BUTANG ACTION BARU --- */
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-add-member { background-color: #cc0000; color: white; }
+        .btn-add-member { background-color: #28a745; color: white; }
         .btn-add-staff { background-color: #6f42c1; color: white; }
         .btn-add-instructor { background-color: #ff9900; color: #111; }
 
@@ -58,11 +58,10 @@
         
         .tab-btn:hover { background-color: #f9f9f9; color: #111; }
         
-        .tab-btn.active { color: #cc0000; }
-        
+        .tab-btn.active { color: #111; }
         .tab-btn.active::after {
             content: ''; position: absolute; bottom: -12px; left: 0; width: 100%; height: 4px;
-            background-color: #cc0000; border-radius: 4px 4px 0 0;
+            background-color: #ffcc00; border-radius: 4px 4px 0 0;
         }
 
         /* --- SECTION HIDING --- */
@@ -92,21 +91,36 @@
         .empty-state { text-align: center; padding: 40px; color: #888; background: #f9f9f9; border-radius: 8px; border: 2px dashed #ddd; margin-top: 10px; }
         
         .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
-        .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .back-link:hover { transform: translateX(-5px); color: #111; }
+        
+        .back-link { color: #111; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .back-link:hover { transform: translateX(-5px); color: #ffcc00; }
 
-        /* --- CUSTOM DATATABLES CSS SUPAYA NGAM DENGAN TEMA --- */
+        /* --- CUSTOM DATATABLES CSS --- */
         .dataTables_wrapper .dataTables_filter input { border: 2px solid #eee; border-radius: 6px; padding: 5px 10px; outline: none; }
-        .dataTables_wrapper .dataTables_filter input:focus { border-color: #cc0000; }
+        .dataTables_wrapper .dataTables_filter input:focus { border-color: #ffcc00; } 
         .dataTables_wrapper .dataTables_length select { border: 2px solid #eee; border-radius: 6px; padding: 5px; }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #ffcc00 !important; color: #111 !important; border: none; font-weight: bold; border-radius: 6px; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #111 !important; color: #ffcc00 !important; border: none; border-radius: 6px; }
 
-        /* --- SPACING UNTUK DATATABLES --- */
         .dataTables_wrapper .dataTables_filter { margin-bottom: 15px; }
         .dataTables_wrapper .dataTables_length { margin-bottom: 15px; }
         .dataTables_wrapper .dataTables_info { margin-top: 15px; padding-top: 10px; }
         .dataTables_wrapper .dataTables_paginate { margin-top: 15px; padding-top: 10px; }
+
+        /* --- KITA EJAS SINI: CSS UNTUK POP-UP MODAL BENGKUNG --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; width: 90%; max-width: 450px; border-radius: 10px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+        .modal-header { background: #111; color: #ffcc00; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ffcc00; }
+        .modal-header h3 { margin: 0; font-size: 1.1em; display: flex; align-items: center; gap: 8px; }
+        .close-modal { background: none; border: none; color: white; cursor: pointer; font-size: 20px; }
+        .close-modal:hover { color: #ffcc00; }
+        .modal-body { padding: 25px 20px; max-height: 400px; overflow-y: auto; }
+        .student-name-link { color: #111; text-decoration: none; border-bottom: 1px dashed #111; cursor: pointer; transition: 0.2s; }
+        .student-name-link:hover { color: #ffcc00; border-bottom-color: #ffcc00; }
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-list li { padding: 12px 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; }
+        .history-list li:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -122,7 +136,6 @@
                     <p>Manage all registered members, instructors, and administrative staff.</p>
                 </div>
                 
-                {{-- 3 BUTANG UNTUK ADMIN TAMBAH PENGGUNA BARU --}}
                 @if(Auth::guard('staff')->check() && Auth::guard('staff')->user()->role === 'admin')
                     <div class="action-buttons">
                         <a href="{{ route('users.create') }}" class="btn btn-add-member" title="Add New Member">
@@ -181,8 +194,27 @@
                             </thead>
                             <tbody>
                                 @foreach($members as $member)
+                                @php
+                                    // KITA EJAS SINI: Tarik data history bengkung budak ni secara senyap-senyap
+                                    $user_id = $member->user_ID ?? $member->id;
+                                    $bengkungHistory = \App\Models\PromotionRequest::with('instructor')
+                                                                                   ->where('user_ID', $user_id)
+                                                                                   ->where('status', 'Approved')
+                                                                                   ->orderBy('created_at', 'desc')
+                                                                                   ->get();
+                                @endphp
                                 <tr>
-                                    <td><b>{{ $member->name }}</b></td>
+                                    <td>
+                                        {{-- KITA EJAS SINI: Jadikan nama butang pop-up --}}
+                                        <a href="javascript:void(0)" 
+                                           class="student-name-link" 
+                                           onclick="openStudentModal(this)"
+                                           data-name="{{ $member->name ?? 'Unknown Student' }}"
+                                           data-ic="{{ $member->icNo ?? $member->ic_no ?? 'N/A' }}"
+                                           data-history="{{ json_encode($bengkungHistory) }}">
+                                           <b>{{ $member->name ?? 'Unknown Student' }}</b>
+                                        </a>
+                                    </td>
                                     <td>{{ $member->email }}</td>
                                     <td>{{ $member->bengkung_level ?? 'N/A' }}</td> 
                                     <td><b>{{ $member->membership->member_type ?? 'None' }}</b></td>
@@ -329,12 +361,88 @@
         </div>
     </div>
 
+    {{-- KITA EJAS SINI: KOTAK POP-UP MODAL --}}
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><span class="material-icons">badge</span> Member Details</h3>
+                <button class="close-modal" onclick="closeStudentModal()"><span class="material-icons">close</span></button>
+            </div>
+            <div class="modal-body">
+                <h2 id="modal-name" style="margin-top: 0; margin-bottom: 5px; font-size: 1.3em;"></h2>
+                <p style="color: #666; font-size: 0.9em; margin-top: 0; margin-bottom: 20px;">
+                    <span class="material-icons" style="font-size: 14px; vertical-align: middle;">pin</span> IC: <span id="modal-ic"></span>
+                </p>
+
+                <h4 style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 0; color: #111;">
+                    <span class="material-icons" style="font-size: 16px; vertical-align: bottom; color: #ffcc00;">military_tech</span> Bengkung History
+                </h4>
+                <ul class="history-list" id="modal-history-list">
+                    </ul>
+            </div>
+        </div>
+    </div>
+
     {{-- 3. JQUERY & DATATABLES JS SCRIPTS --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-    {{-- --- JAVASCRIPT UNTUK TABS & PAGINATION --- --}}
+    {{-- --- JAVASCRIPT UNTUK TABS, PAGINATION & MODAL --- --}}
     <script>
+        // KITA EJAS SINI: Fungsi JavaScript untuk kawal modal
+        function openStudentModal(element) {
+            const name = element.getAttribute('data-name');
+            const ic = element.getAttribute('data-ic');
+            const historyJson = element.getAttribute('data-history');
+            
+            document.getElementById('modal-name').innerText = name;
+            document.getElementById('modal-ic').innerText = ic;
+
+            const historyListEl = document.getElementById('modal-history-list');
+            historyListEl.innerHTML = ''; 
+
+            try {
+                const historyData = JSON.parse(historyJson);
+                
+                if(!historyData || historyData.length === 0) {
+                    historyListEl.innerHTML = '<li><span style="color:#888; font-style:italic;">No belt promotion history yet.</span></li>';
+                } else {
+                    historyData.forEach(record => {
+                        const li = document.createElement('li');
+                        
+                        const dateObj = new Date(record.updated_at || record.created_at);
+                        const dateStr = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                        
+                        const instructorName = record.instructor ? record.instructor.name : 'Unknown Instructor';
+                        const previousBengkung = record.current_bengkung || 'N/A';
+
+                        li.innerHTML = `
+                            <div style="flex: 1;">
+                                <b style="font-size: 1.1em; color: #111;">${record.requested_bengkung}</b>
+                                <div style="font-size: 0.85em; color: #666; margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+                                    <span><span class="material-icons" style="font-size:14px; vertical-align:text-bottom; color:#888;">history</span> Prev: <b>${previousBengkung}</b></span>
+                                    <span><span class="material-icons" style="font-size:14px; vertical-align:text-bottom; color:#888;">person</span> By: ${instructorName}</span>
+                                </div>
+                            </div>
+                            <div style="text-align: right; color: #666; font-size: 0.85em; font-family: monospace;">
+                                <span class="material-icons" style="font-size:14px; vertical-align:text-bottom;">event_available</span><br>
+                                ${dateStr}
+                            </div>
+                        `;
+                        historyListEl.appendChild(li);
+                    });
+                }
+            } catch (e) {
+                historyListEl.innerHTML = '<li><span style="color:red;">Error loading history.</span></li>';
+            }
+
+            document.getElementById('studentModal').classList.add('active');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.remove('active');
+        }
+
         $(document).ready(function() {
             // Setup Pagination (DataTables)
             $('.dataTable').DataTable({
@@ -347,33 +455,26 @@
             });
 
             // --- FUNGSI INGAT TAB TERAKHIR (localStorage) ---
-            // Dapatkan memori tab mana yang terbuka. Kalau takde, buka 'members' by default
             const lastTab = localStorage.getItem('activeUserTab') || 'members';
             
-            // Cari butang yang sepadan dengan tab tu dan aktifkan dia
             const lastBtn = document.querySelector(`.tab-btn[data-target="${lastTab}"]`);
             if (lastBtn) {
-                // Jangan panggil showSection terus, kita cuma manipulasi kelas supaya table render betul
                 showSection(lastTab, lastBtn);
             }
         });
 
         // Setup Tukar Tab
         function showSection(sectionName, btnElement) {
-            // 1. Simpan nama tab yang ditekan ke dalam memori browser
             localStorage.setItem('activeUserTab', sectionName);
 
-            // 2. Hide semua section
             const sections = document.querySelectorAll('.user-section');
             sections.forEach(sec => sec.classList.remove('active-section'));
 
-            // 3. Tunjuk section yang sepatutnya
             const targetSection = document.getElementById(sectionName + '-section');
             if(targetSection) {
                 targetSection.classList.add('active-section');
             }
 
-            // 4. Update warna/garis pada butang tab
             const tabBtns = document.querySelectorAll('.tab-btn');
             tabBtns.forEach(btn => btn.classList.remove('active'));
 

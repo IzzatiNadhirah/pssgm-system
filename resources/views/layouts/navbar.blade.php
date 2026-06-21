@@ -18,13 +18,12 @@
     .nav-left { display: flex; align-items: center; gap: 12px; color: white; font-weight: bold; letter-spacing: 1px; }
     .nav-logo-small { width: 40px; height: auto; }
 
-    .nav-center { display: flex; gap: 25px; }
+    .nav-center { display: flex; gap: 20px; }
 
-    /* FIX WARNA UNGU & LINK STYLE */
     .nav-link {
         color: white !important; 
         text-decoration: none !important;
-        font-size: 0.9em;
+        font-size: 0.85em;
         font-weight: 600;
         display: flex;
         align-items: center; gap: 6px;
@@ -37,9 +36,8 @@
 
     .user-meta { text-align: right; color: white; line-height: 1.2; }
     .user-meta .user-name { display: block; font-size: 0.9em; font-weight: bold; }
-    .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; text-transform: uppercase; }
+    .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; font-weight: bold; text-transform: uppercase; }
 
-    /* --- KITA EJAS SINI: Style untuk Link Profile --- */
     .profile-link {
         display: flex;
         align-items: center;
@@ -66,7 +64,7 @@
     }
     .btn-logout-nav:hover { background-color: #ff0000; }
 
-    @media (max-width: 768px) { .nav-center { display: none; } }
+    @media (max-width: 992px) { .nav-center { display: none; } }
 </style>
 
 <nav class="navbar">
@@ -75,89 +73,132 @@
         <span>PSSGM MELAKA</span>
     </div>
 
-    <div class="nav-center">
-        @if(Auth::guard('staff')->check())
-            <a href="{{ route('staff.dashboard') }}" class="nav-link">
-                <span class="material-icons">admin_panel_settings</span> Admin Panel
-            </a>
-            <a href="{{ route('courses.index') }}" class="nav-link">
-                <span class="material-icons">list_alt</span> Manage Courses
-            </a>
+    @php
+        // Kenal pasti siapa yang sedang log masuk
+        $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
+        $isMember = false;
+        $role = '';
+        
+        if ($user) {
+            if (Auth::guard('staff')->check()) {
+                $role = strtolower($user->role ?? '') === 'admin' ? 'ADMIN' : 'SYSTEM STAFF';
+            } elseif (Auth::guard('instructor')->check()) {
+                $role = 'INSTRUCTOR';
+            } else {
+                $role = 'ACTIVE';
+                $isMember = true; 
+            }
+        }
+    @endphp
+
+    @if($user)
+        <div class="nav-center">
             
-            {{-- PENGHADANG KESELAMATAN: Hanya staff berpangkat 'admin' nampak menu ni --}}
-            @if(strtolower(Auth::guard('staff')->user()->role) === 'admin')
-                <a href="{{ route('users.index') }}" class="nav-link">
-                    <span class="material-icons">people</span> Members
+            {{-- ========================================== --}}
+            {{-- MENU UNTUK STAFF & SUPER ADMIN --}}
+            {{-- ========================================== --}}
+            @if(Auth::guard('staff')->check())
+                
+                {{-- SUSUNAN TEPAT UNTUK SUPER ADMIN --}}
+                @if(strtolower(Auth::guard('staff')->user()->role) === 'admin')
+                    <a href="{{ route('staff.dashboard') }}" class="nav-link">
+                        <span class="material-icons">dashboard</span> Dashboard
+                    </a>
+                    
+                    {{-- KITA EJAS SINI: 5 Menu Super Admin mengikut Request Bos --}}
+                    <a href="{{ route('gelanggangs.pending') }}" class="nav-link">
+                        <span class="material-icons">rule</span> Approvals
+                    </a>
+                    <a href="{{ route('cawangans.index') }}" class="nav-link">
+                        <span class="material-icons">domain</span> Branches
+                    </a>
+                    <a href="{{ route('gelanggangs.index') }}" class="nav-link">
+                        <span class="material-icons">stadium</span> Gelanggang
+                    </a>
+                    <a href="{{ route('users.index') }}" class="nav-link">
+                        <span class="material-icons">manage_accounts</span> Users
+                    </a>
+                    <a href="{{ route('staff.payments.index') }}" class="nav-link">
+                        <span class="material-icons">receipt_long</span> Payments
+                    </a>
+                
+                {{-- SUSUNAN UNTUK SYSTEM STAFF BIASA --}}
+                @else
+                    <a href="{{ route('staff.dashboard') }}" class="nav-link">
+                        <span class="material-icons">admin_panel_settings</span> Admin Panel
+                    </a>
+                    <a href="{{ route('gelanggangs.index') }}" class="nav-link">
+                        <span class="material-icons">storefront</span> Gelanggang
+                    </a>
+                    <a href="{{ route('courses.index') }}" class="nav-link">
+                        <span class="material-icons">list_alt</span> Manage Courses
+                    </a>
+                    <a href="{{ route('staff.promotions.index') }}" class="nav-link">
+                        <span class="material-icons">military_tech</span> Bengkung
+                    </a>
+                @endif
+
+            {{-- ========================================== --}}
+            {{-- MENU UNTUK INSTRUCTOR --}}
+            {{-- ========================================== --}}
+            @elseif(Auth::guard('instructor')->check())
+                <a href="{{ route('instructor.dashboard') }}" class="nav-link">
+                    <span class="material-icons">dashboard</span> Dashboard
+                </a>
+                <a href="{{ route('courses.index') }}" class="nav-link">
+                    <span class="material-icons">menu_book</span> My Courses
+                </a>
+                <a href="{{ route('instructor.enrolled') }}" class="nav-link">
+                    <span class="material-icons">groups</span> Students
+                </a>
+                <a href="{{ route('attendance.index') }}" class="nav-link">
+                    <span class="material-icons">fact_check</span> Attendance
+                </a>
+                <a href="{{ route('promotions.index') }}" class="nav-link">
+                    <span class="material-icons">military_tech</span> Promotions
+                </a>
+
+            {{-- ========================================== --}}
+            {{-- MENU UNTUK PELAJAR (USER BIASA) --}}
+            {{-- ========================================== --}}
+            @else
+                <a href="{{ route('dashboard') }}" class="nav-link">
+                    <span class="material-icons">dashboard</span> Dashboard
+                </a>
+                <a href="{{ route('courses.index') }}" class="nav-link">
+                    <span class="material-icons">fitness_center</span> Courses
+                </a>
+                <a href="{{ route('timetable.index') }}" class="nav-link">
+                    <span class="material-icons">event_note</span> My Timetable
+                </a>
+                <a href="{{ route('membership.history') }}" class="nav-link">
+                    <span class="material-icons">receipt_long</span> History
                 </a>
             @endif
+        </div>
 
-        @elseif(Auth::guard('instructor')->check())
-            <a href="{{ route('instructor.dashboard') }}" class="nav-link">
-                <span class="material-icons">dashboard</span> Dashboard
-            </a>
-            <a href="{{ route('courses.index') }}" class="nav-link">
-                <span class="material-icons">menu_book</span> My Courses
-            </a>
-            <a href="{{ route('attendance.index') }}" class="nav-link">
-                <span class="material-icons">fact_check</span> Attendance
-            </a>
-
-        @else
-            <a href="{{ route('dashboard') }}" class="nav-link">
-                <span class="material-icons">dashboard</span> Dashboard
-            </a>
-            <a href="{{ route('courses.index') }}" class="nav-link">
-                <span class="material-icons">fitness_center</span> Courses
-            </a>
-            
-            {{-- KITA EJAS SINI: Tambah link My Timetable untuk User Biasa --}}
-            <a href="{{ route('timetable.index') }}" class="nav-link">
-                <span class="material-icons">event_note</span> My Timetable
-            </a>
-            
-            <a href="{{ route('membership.history') }}" class="nav-link">
-                <span class="material-icons">receipt_long</span> History
-            </a>
-        @endif
-    </div>
-
-    <div class="nav-right">
-        @php
-            $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
-            $isMember = false;
-            
-            // LOGIK BAHARU UNTUK TENTUKAN PANGKAT (ROLE) DENGAN TEPAT
-            if (Auth::guard('staff')->check()) {
-                $role = strtolower(Auth::guard('staff')->user()->role) === 'admin' ? 'Admin' : 'System Staff';
-            } elseif (Auth::guard('instructor')->check()) {
-                $role = 'Instructor';
-            } else {
-                $role = 'Active';
-                $isMember = true; // Set flag ni true kalau dia Ahli
-            }
-        @endphp
-
-        {{-- Paparan berbeza untuk Ahli (Boleh klik) vs Staf/Cikgu (Statik) --}}
-        @if($isMember)
-            <a href="{{ route('profile.edit') }}" class="profile-link" title="Manage My Profile">
+        <div class="nav-right">
+            @if($isMember)
+                <a href="{{ route('profile.edit') }}" class="profile-link" title="Manage My Profile">
+                    <div class="user-meta">
+                        <span class="user-name">{{ $user->name }}</span>
+                        <span class="user-role">{{ $role }}</span>
+                    </div>
+                    <span class="material-icons">account_circle</span>
+                </a>
+            @else
                 <div class="user-meta">
                     <span class="user-name">{{ $user->name }}</span>
                     <span class="user-role">{{ $role }}</span>
                 </div>
-                <span class="material-icons">account_circle</span>
-            </a>
-        @else
-            <div class="user-meta">
-                <span class="user-name">{{ $user->name }}</span>
-                <span class="user-role">{{ $role }}</span>
-            </div>
-        @endif
+            @endif
 
-        <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
-            @csrf
-            <button type="submit" class="btn-logout-nav">
-                <span class="material-icons" style="font-size: 18px;">logout</span> Logout
-            </button>
-        </form>
-    </div>
+            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                @csrf
+                <button type="submit" class="btn-logout-nav">
+                    <span class="material-icons" style="font-size: 18px;">logout</span> Logout
+                </button>
+            </form>
+        </div>
+    @endif
 </nav>

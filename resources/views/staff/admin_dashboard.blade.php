@@ -16,16 +16,6 @@
             border-top: 8px solid #cc0000; border-bottom: 8px solid #ffcc00; 
         }
 
-        /* --- HEADER --- */
-        .header-area { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 30px; }
-        h2 { margin: 0; color: #111; text-transform: uppercase; letter-spacing: 2px; font-size: 2.2em; }
-        .subtitle { color: #555; font-size: 1.1em; margin-top: 10px; }
-        .status-badge { 
-            display: inline-flex; align-items: center; gap: 5px; background: #cce5ff; 
-            color: #004085; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin-top: 15px; 
-            border: 1px solid #b8daff;
-        }
-
         /* --- STATS BOXES --- */
         .stats-container { display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
         
@@ -90,14 +80,7 @@
     <div class="content-area">
         <div class="container">
             
-            <div class="header-area">
-                <h2>HQ Overview</h2>
-                <p class="subtitle">Welcome to the master control panel</p>
-                <div class="status-badge">
-                    <span class="material-icons" style="font-size: 18px;">admin_panel_settings</span> Admin
-                </div>
-            </div>
-
+            {{-- KITA EJAS SINI: Buang terus .header-area dan mula dengan stat-card --}}
             <div class="stats-container">
                 <div class="stat-card">
                     <h4>Members</h4>
@@ -129,7 +112,7 @@
                     // Kira Gelanggang Pending
                     $pendingGelanggangCount = \App\Models\Gelanggang::where('status', 'pending')->count();
                     
-                    // KITA EJAS SINI: Kira Payment Pending
+                    // Kira Payment Pending
                     $pendingPaymentCount = \App\Models\Payment::where('payment_status', 'Pending Verification')->count();
                 @endphp
 
@@ -170,7 +153,6 @@
                     </div>
                 </a>
 
-                {{-- KITA EJAS SINI: Kad Payment Approvals dengan Notifikasi --}}
                 <a href="{{ route('staff.payments.index') }}" class="card-link">
                     <div class="card">
                         <div class="icon-wrapper">
