@@ -26,7 +26,7 @@ class PromotionController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->get();
 
-        // KITA EJAS SINI: Filter pelajar yang PERNAH enroll dengan cikgu ni sahaja
+        // Filter pelajar yang PERNAH enroll dengan cikgu ni sahaja
         // Langkah 1: Cari ID pelajar yang berdaftar dengan kelas cikgu ni
         $enrolledStudentIds = Enrollment::whereHas('course', function($query) use ($instructorId) {
                                 $query->where('instructor_ID', $instructorId);
@@ -43,7 +43,7 @@ class PromotionController extends Controller
     // Proses simpan borang permohonan baru
     public function store(Request $request)
     {
-        // KITA EJAS SINI: Tambah validation untuk markah supaya tak lebih dari had
+        // Tambah validation untuk markah supaya tak lebih dari had
         $request->validate([
             'user_ID' => 'required',
             'requested_bengkung' => 'required|string',
@@ -57,7 +57,7 @@ class PromotionController extends Controller
         
         $pelajar = User::where('user_ID', $request->user_ID)->firstOrFail();
 
-        // KITA EJAS SINI: Kira jumlah markah
+        // Kira jumlah markah
         $total_mark = $request->mark_asas + $request->mark_silibus + $request->mark_disiplin;
 
         PromotionRequest::create([
@@ -114,8 +114,14 @@ class PromotionController extends Controller
     {
         $promotion = PromotionRequest::findOrFail($id);
         
-        // 1. Ubah status permohonan jadi Approved
-        $promotion->update(['status' => 'Approved']);
+        // KITA EJAS SINI: Tangkap ID staf yang tekan butang Approve ni
+        $staffId = Auth::guard('staff')->user()->staff_ID ?? Auth::guard('staff')->id();
+        
+        // 1. Ubah status permohonan jadi Approved & simpan ID Staf
+        $promotion->update([
+            'status' => 'Approved',
+            'approved_by' => $staffId
+        ]);
 
         // 2. Automatik update bengkung baru budak tu dalam table users
         $pelajar = User::where('user_ID', $promotion->user_ID)->first();
@@ -133,8 +139,14 @@ class PromotionController extends Controller
     {
         $promotion = PromotionRequest::findOrFail($id);
         
-        // Ubah status permohonan jadi Rejected
-        $promotion->update(['status' => 'Rejected']);
+        // KITA EJAS SINI: Tangkap ID staf yang tekan butang Reject ni
+        $staffId = Auth::guard('staff')->user()->staff_ID ?? Auth::guard('staff')->id();
+        
+        // Ubah status permohonan jadi Rejected & simpan ID Staf
+        $promotion->update([
+            'status' => 'Rejected',
+            'approved_by' => $staffId
+        ]);
 
         return back()->with('success', 'Bengkung request has been rejected.');
     }

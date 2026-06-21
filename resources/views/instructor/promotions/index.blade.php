@@ -169,7 +169,7 @@
                                     <th>Date</th>
                                     <th>Student</th>
                                     <th>Level Update</th>
-                                    <th>Score</th> {{-- TAMBAH COLUMN SCORE --}}
+                                    <th>Score</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -187,7 +187,6 @@
                                         <b>{{ $request->requested_bengkung }}</b>
                                     </td>
                                     <td>
-                                        {{-- PAPARKAN MARKAH --}}
                                         @if($request->total_mark)
                                             <b style="color: {{ $request->total_mark >= 60 ? '#28a745' : '#dc3545' }}; font-size: 1.1em;">
                                                 {{ $request->total_mark }}%
@@ -197,10 +196,23 @@
                                         @endif
                                     </td>
                                     <td>
+                                        {{-- KITA EJAS SINI: Tambah nama staf jika dah diluluskan/ditolak --}}
                                         @if($request->status == 'Approved')
                                             <span class="status-badge status-approved">Approved</span>
+                                            @if($request->staff)
+                                                <div style="font-size: 0.8em; color: #555; margin-top: 5px;">
+                                                    <span class="material-icons" style="font-size: 12px; vertical-align: middle;">verified_user</span> 
+                                                    {{ $request->staff->name }}
+                                                </div>
+                                            @endif
                                         @elseif($request->status == 'Rejected')
                                             <span class="status-badge status-rejected">Rejected</span>
+                                            @if($request->staff)
+                                                <div style="font-size: 0.8em; color: #555; margin-top: 5px;">
+                                                    <span class="material-icons" style="font-size: 12px; vertical-align: middle;">person_off</span> 
+                                                    {{ $request->staff->name }}
+                                                </div>
+                                            @endif
                                         @else
                                             <span class="status-badge status-pending">Pending</span>
                                         @endif

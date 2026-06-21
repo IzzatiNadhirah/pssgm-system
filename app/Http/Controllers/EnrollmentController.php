@@ -26,22 +26,19 @@ class EnrollmentController extends Controller
             return redirect()->back()->with('error', 'Enrollment blocked! This course does not have an assigned instructor yet.');
         }
 
-        // 2. KITA EJAS SINI: Tangkap array 'session_ids' (pukal) atau 'session_id' (single)
         $session_ids = $request->input('session_ids');
         if (empty($session_ids) && $request->has('session_id')) {
-            $session_ids = [$request->input('session_id')]; // Jadikan array juga supaya mudah loop
+            $session_ids = [$request->input('session_id')]; 
         }
 
         if (empty($session_ids)) {
             return redirect()->back()->with('error', 'Enrollment failed! Please select a valid class session date.');
         }
 
-        // Pembolehubah untuk simpan rekod kejayaan/kegagalan
         $berjaya = 0;
         $gagalPenuh = 0;
         $gagalDuplicate = 0;
 
-        // 3. KITA EJAS SINI: Loop pendaftaran untuk setiap ID Sesi yang dihantar
         foreach ($session_ids as $sid) {
             $session = SessionTimetable::find($sid);
             if (!$session) continue;
@@ -53,7 +50,7 @@ class EnrollmentController extends Controller
 
             if ($alreadyEnrolled) {
                 $gagalDuplicate++;
-                continue; // Skip kelas ni, pergi kelas seterusnya
+                continue; 
             }
 
             // Check class capacity
@@ -61,7 +58,7 @@ class EnrollmentController extends Controller
             
             if ($session->capacity && $currentEnrolled >= $session->capacity) {
                 $gagalPenuh++;
-                continue; // Skip kelas ni, pergi kelas seterusnya
+                continue; 
             }
 
             // Simpan data pendaftaran
@@ -75,11 +72,9 @@ class EnrollmentController extends Controller
             $berjaya++;
         }
 
-        // 4. KITA EJAS SINI: Papar mesej berdasarkan hasil Loop tadi
         if ($berjaya > 0) {
             $mesej = "Congratulations! You have successfully enrolled in $berjaya class session(s).";
             
-            // Beritahu juga kalau ada kelas yang ter-skip
             if ($gagalPenuh > 0 || $gagalDuplicate > 0) {
                 $mesej .= " (Skipped " . ($gagalPenuh + $gagalDuplicate) . " session(s) due to being full or already enrolled).";
             }
@@ -98,7 +93,48 @@ class EnrollmentController extends Controller
                                  ->orderBy('created_at', 'desc')
                                  ->get();
 
-        return view('user.timetable', compact('enrollments'));
+        // KITA EJAS SINI: Buat array events berserta data pop-up modal
+        $calendarEvents = [];
+        foreach ($enrollments as $enrollment) {
+            $sesi = $enrollment->session;
+            
+            if ($sesi) {
+                // Tentukan adakah kelas dah lepas atau belum
+                $tarikhMula = \Carbon\Carbon::parse($sesi->start_time)->format('Y-m-d');
+                $masaTamat = $sesi->end_time;
+                
+                if (strlen($masaTamat) <= 8) {
+                    $gabunganTamat = \Carbon\Carbon::parse($tarikhMula . ' ' . $masaTamat);
+                } else {
+                    $gabunganTamat = \Carbon\Carbon::parse($masaTamat);
+                }
+                
+                $isPast = $gabunganTamat->isPast();
+
+                $calendarEvents[] = [
+                    'title' => $enrollment->course->course_type ?? 'Kelas Silat',
+                    
+                    // Format ISO8601 TEPAT tanpa '+08:00' supaya browser tak tambah 8 jam
+                    'start' => \Carbon\Carbon::parse($sesi->start_time)->format('Y-m-d\TH:i:s'),
+                    'end'   => $gabunganTamat->format('Y-m-d\TH:i:s'),
+                    
+                    // Warna kelabu kalau dah lepas, warna merah gayong kalau belum
+                    'color' => $isPast ? '#888888' : '#cc0000',
+                    'className' => $isPast ? 'fc-event-past' : '',
+                    
+                    // Maklumat tambahan untuk dipaparkan di dalam Pop-up Modal
+                    'extendedProps' => [
+                        'courseName'  => $enrollment->course->course_type ?? 'Training Class',
+                        'instructor'  => $enrollment->course->instructor->name ?? 'TBA',
+                        'location'    => $sesi->gelanggang->gel_name ?? 'TBA',
+                        'timeDisplay' => \Carbon\Carbon::parse($sesi->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($sesi->end_time)->format('h:i A')
+                    ]
+                ];
+            }
+        }
+
+        // Hantar $calendarEvents ke fail paparan blade
+        return view('user.timetable', compact('enrollments', 'calendarEvents'));
     }
 
     public function destroy($id)

@@ -173,10 +173,17 @@
                                             </form>
                                         </div>
                                     @else
+                                        {{-- KITA EJAS SINI: Tunjuk nama staf yang laksanakan tindakan ni --}}
                                         @if($request->status == 'Approved')
                                             <span class="status-badge status-approved">Approved</span>
                                         @else
                                             <span class="status-badge status-rejected">Rejected</span>
+                                        @endif
+                                        
+                                        @if($request->staff)
+                                            <div style="margin-top: 8px; font-size: 0.85em; color: #555;">
+                                                <b>By:</b> {{ $request->staff->name }}
+                                            </div>
                                         @endif
                                     @endif
                                 </td>

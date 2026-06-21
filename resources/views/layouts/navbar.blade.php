@@ -36,7 +36,8 @@
 
     .user-meta { text-align: right; color: white; line-height: 1.2; }
     .user-meta .user-name { display: block; font-size: 0.9em; font-weight: bold; }
-    .user-meta .user-role { display: block; font-size: 0.75em; color: #ffcc00; font-weight: bold; text-transform: uppercase; }
+    /* KITA EJAS SINI: Padam sikit warna emas pada role supaya kita boleh tukar warna ikut status */
+    .user-meta .user-role { display: block; font-size: 0.75em; font-weight: bold; text-transform: uppercase; }
 
     .profile-link {
         display: flex;
@@ -78,6 +79,7 @@
         $user = Auth::guard('staff')->user() ?? Auth::guard('instructor')->user() ?? Auth::user();
         $isMember = false;
         $role = '';
+        $roleColor = '#ffcc00'; // Warna asal (Emas)
         
         if ($user) {
             if (Auth::guard('staff')->check()) {
@@ -85,8 +87,23 @@
             } elseif (Auth::guard('instructor')->check()) {
                 $role = 'INSTRUCTOR';
             } else {
-                $role = 'ACTIVE';
                 $isMember = true; 
+                
+                // KITA EJAS SINI: Semak status keahlian sebenar pelajar (User biasa)
+                $activeMembership = \App\Models\Membership::where('user_ID', $user->user_ID ?? $user->id)
+                                    ->where(function($query) {
+                                        $query->whereNull('expired_at')
+                                              ->orWhere('expired_at', '>', now());
+                                    })
+                                    ->first();
+                
+                if ($activeMembership) {
+                    $role = 'ACTIVE';
+                    $roleColor = '#28a745'; // Hijau untuk aktif
+                } else {
+                    $role = 'INACTIVE / PENDING';
+                    $roleColor = '#dc3545'; // Merah untuk belum bayar atau expired
+                }
             }
         }
     @endphp
@@ -105,7 +122,6 @@
                         <span class="material-icons">dashboard</span> Dashboard
                     </a>
                     
-                    {{-- KITA EJAS SINI: 5 Menu Super Admin mengikut Request Bos --}}
                     <a href="{{ route('gelanggangs.pending') }}" class="nav-link">
                         <span class="material-icons">rule</span> Approvals
                     </a>
@@ -182,14 +198,15 @@
                 <a href="{{ route('profile.edit') }}" class="profile-link" title="Manage My Profile">
                     <div class="user-meta">
                         <span class="user-name">{{ $user->name }}</span>
-                        <span class="user-role">{{ $role }}</span>
+                        {{-- KITA EJAS SINI: Tunjuk status beserta warna yang sesuai --}}
+                        <span class="user-role" style="color: {{ $roleColor }};">{{ $role }}</span>
                     </div>
                     <span class="material-icons">account_circle</span>
                 </a>
             @else
                 <div class="user-meta">
                     <span class="user-name">{{ $user->name }}</span>
-                    <span class="user-role">{{ $role }}</span>
+                    <span class="user-role" style="color: {{ $roleColor }};">{{ $role }}</span>
                 </div>
             @endif
 

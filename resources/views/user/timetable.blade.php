@@ -365,8 +365,10 @@
                         if($sesi && $sesi->start_time && $gabunganTamat) {
                             $warna = $isPast ? '#888888' : '#cc0000'; 
                             $title = $enrollment->course->course_type ?? 'Training Class';
-                            $startIso = \Carbon\Carbon::parse($sesi->start_time)->toIso8601String();
-                            $endIso = $gabunganTamat->toIso8601String();
+                            
+                            // KITA EJAS SINI: Format masa tanpa zon masa supaya browser tak tambah 8 jam
+                            $startIso = \Carbon\Carbon::parse($sesi->start_time)->format('Y-m-d\TH:i:s');
+                            $endIso = $gabunganTamat->format('Y-m-d\TH:i:s');
                             
                             $instructor = addslashes($enrollment->course->instructor->name ?? 'TBA');
                             $lokasi = addslashes($sesi->gelanggang->gel_name ?? 'TBA');
@@ -375,15 +377,15 @@
                     @endphp
                     @if($sesi && $sesi->start_time)
                     {
-                        title: '{{ $title }}',
+                        title: '{!! $title !!}',
                         start: '{{ $startIso }}',
                         end: '{{ $endIso }}',
                         color: '{{ $warna }}',
                         className: '{{ $isPast ? "fc-event-past" : "" }}',
                         extendedProps: {
-                            courseName: '{{ $title }}',
-                            instructor: '{{ $instructor }}',
-                            location: '{{ $lokasi }}',
+                            courseName: '{!! $title !!}',
+                            instructor: '{!! $instructor !!}',
+                            location: '{!! $lokasi !!}',
                             timeDisplay: '{{ $masaPaparan }}'
                         }
                     },

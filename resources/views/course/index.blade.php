@@ -191,7 +191,6 @@
                                                 ->orderBy('start_time', 'asc')
                                                 ->get();
                                                 
-                                    // KITA EJAS SINI: Kelompokkan guna cap jari created_at
                                     $groupedSessions = [];
                                     
                                     foreach($allSessions as $sesi) {
@@ -218,7 +217,6 @@
                                         $groupedSessions[$groupKey]['all_sessions'][] = $sesi;
                                     }
 
-                                    // Susun kumpulan berdasarkan tarikh kelas terawal dalam kumpulan tersebut
                                     uasort($groupedSessions, function($a, $b) {
                                         $timeA = $a['first_session']->start_time ? strtotime($a['first_session']->start_time) : 0;
                                         $timeB = $b['first_session']->start_time ? strtotime($b['first_session']->start_time) : 0;
@@ -268,7 +266,6 @@
                                             }
                                             $isFull = $current_enrolled >= $limit_capacity;
                                             
-                                            // Check kalau KESEMUA kelas dalam group ni dah lepas
                                             $allPast = true;
                                             foreach($group['all_sessions'] as $s) {
                                                 if(!\Carbon\Carbon::parse($s->start_time)->isPast()) {
@@ -443,24 +440,44 @@
                 var courseColIndex = 0; 
                 var branchColIndex = 2; 
 
-                table.column(courseColIndex).data().unique().sort().each(function (d, j) {
-                    var val = $('<div>' + d + '</div>').text().trim();
-                    if(val) { $('#filter-course').append('<option value="' + val + '">' + val + '</option>'); }
+                // --- FUNGSI FILTER BAHARU ---
+                var courseList = [];
+                table.column(courseColIndex).nodes().to$().each(function () {
+                    // Tangkap teks dan buang segala space tersembunyi
+                    var val = $(this).text().replace(/\s+/g, ' ').trim(); 
+                    if (val && !courseList.includes(val)) {
+                        courseList.push(val);
+                    }
+                });
+                
+                $('#filter-course').empty().append('<option value="">-- All Courses --</option>');
+                courseList.sort().forEach(function(val) {
+                    $('#filter-course').append('<option value="' + val + '">' + val + '</option>');
                 });
 
-                table.column(branchColIndex).data().unique().sort().each(function (d, j) {
-                    var val = $('<div>' + d + '</div>').text().trim();
-                    if(val && val !== 'TBA') { $('#filter-branch').append('<option value="' + val + '">' + val + '</option>'); }
+                var branchList = [];
+                table.column(branchColIndex).nodes().to$().each(function () {
+                    var val = $(this).text().replace(/\s+/g, ' ').trim();
+                    if (val && val !== 'TBA' && !branchList.includes(val)) {
+                        branchList.push(val);
+                    }
+                });
+                
+                $('#filter-branch').empty().append('<option value="">-- All Branches --</option>');
+                branchList.sort().forEach(function(val) {
+                    $('#filter-branch').append('<option value="' + val + '">' + val + '</option>');
                 });
 
                 $('#filter-course').on('change', function () {
                     var val = $(this).val();
-                    table.column(courseColIndex).search(val ? '^'+val+'$' : '', true, false).draw();
+                    var searchVal = val ? '^' + $.fn.dataTable.util.escapeRegex(val) + '$' : '';
+                    table.column(courseColIndex).search(searchVal, true, false).draw();
                 });
 
                 $('#filter-branch').on('change', function () {
                     var val = $(this).val();
-                    table.column(branchColIndex).search(val ? '^'+val+'$' : '', true, false).draw();
+                    var searchVal = val ? '^' + $.fn.dataTable.util.escapeRegex(val) + '$' : '';
+                    table.column(branchColIndex).search(searchVal, true, false).draw();
                 });
             } else {
                 $('#instructorTable').DataTable({
