@@ -38,7 +38,7 @@
         textarea.form-control { resize: vertical; min-height: 100px; }
 
         .btn-submit { 
-            background-color: #cc0000; color: white; border: none; padding: 14px 24px; 
+            background-color: #2a2c04; color: white; border: none; padding: 14px 24px; 
             font-size: 1em; font-weight: bold; border-radius: 6px; cursor: pointer; 
             transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; 
             width: 100%; justify-content: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;

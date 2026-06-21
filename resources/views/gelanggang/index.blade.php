@@ -31,7 +31,7 @@
         tr:hover { background-color: #fffdf5; transition: 0.2s; }
         
         .btn { padding: 8px 16px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
-        .btn-add { background-color: #cc0000; color: white; }
+        .btn-add { background-color: #080a71; color: white; }
         .btn-edit { background-color: #ffcc00; color: #111; padding: 6px 12px; }
         .btn-delete { background-color: #333; color: white; padding: 6px 12px; }
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }

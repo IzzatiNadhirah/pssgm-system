@@ -36,7 +36,7 @@
         .form-control:focus { border-color: #cc0000; outline: none; box-shadow: 0 0 5px rgba(204,0,0,0.4); }
 
         .btn-submit { 
-            background-color: #cc0000; color: white; border: none; padding: 14px 24px; 
+            background-color: #023410; color: white; border: none; padding: 14px 24px; 
             font-size: 1em; font-weight: bold; border-radius: 6px; cursor: pointer; 
             transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; 
             width: 100%; justify-content: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;

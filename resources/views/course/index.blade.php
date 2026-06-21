@@ -22,7 +22,7 @@
         tr:hover { background-color: #fffdf5; }
         
         .btn { padding: 8px 16px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; transition: 0.2s; }
-        .btn-add { background-color: #cc0000; color: white; }
+        .btn-add { background-color: #070361; color: white; }
         .btn-edit { background-color: #ffcc00; color: #111; }
         .btn-delete { background-color: #333; color: white; }
         .btn-schedule { background-color: #17a2b8; color: white; }
