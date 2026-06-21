@@ -196,7 +196,6 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{-- KITA EJAS SINI: Tambah nama staf jika dah diluluskan/ditolak --}}
                                         @if($request->status == 'Approved')
                                             <span class="status-badge status-approved">Approved</span>
                                             @if($request->staff)
@@ -238,10 +237,12 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Select Student</label>
-                            <select name="user_ID" required>
-                                <option value="" disabled selected>-- Choose Student from Directory --</option>
+                            <!-- KITA EJAS SINI: Tambah ID 'studentSelect' -->
+                            <select name="user_ID" id="studentSelect" required>
+                                <option value="" disabled selected data-bengkung="">-- Choose Student from Directory --</option>
                                 @foreach($students as $student)
-                                    <option value="{{ $student->user_ID ?? $student->id }}">
+                                    <!-- KITA EJAS SINI: Selitkan data-bengkung -->
+                                    <option value="{{ $student->user_ID ?? $student->id }}" data-bengkung="{{ $student->bengkung_level }}">
                                         {{ $student->name }} (Current: {{ $student->bengkung_level ?? 'Tiada Rekod' }})
                                     </option>
                                 @endforeach
@@ -250,7 +251,8 @@
 
                         <div class="form-group">
                             <label>Requested Bengkung Level</label>
-                            <select name="requested_bengkung" required>
+                            <!-- KITA EJAS SINI: Tambah ID 'bengkungSelect' -->
+                            <select name="requested_bengkung" id="bengkungSelect" required>
                                 <option value="" disabled selected>-- Select New Bengkung Level --</option>
                                 <optgroup label="Kanak-Kanak">
                                     <option value="Awan Putih Cula Hijau">Awan Putih Cula Hijau</option>
@@ -268,6 +270,7 @@
                                     <option value="Pelangi Kuning II">Pelangi Kuning II</option>
                                     <option value="Pelangi Kuning III">Pelangi Kuning III</option>
                                     <option value="Pelangi Kuning IV">Pelangi Kuning IV</option>
+                                    <option value="Hitam Kosong">Hitam Kosong</option>
                                     <option value="Hitam Pelangi Cula Sakti I">Hitam Pelangi Cula Sakti I</option>
                                     <option value="Hitam Pelangi Cula Sakti II">Hitam Pelangi Cula Sakti II</option>
                                     <option value="Hitam Pelangi Cula Sakti III">Hitam Pelangi Cula Sakti III</option>
@@ -333,6 +336,73 @@
                     "search": "Search History:" 
                 }
             });
+
+            // =========================================================
+            // FUNGSI AUTO-FILTER BENGKUNG BERDASARKAN HIERARKI
+            // =========================================================
+            const bengkungHierarchy = {
+                // Kanak-Kanak
+                "Awan Putih Cula Hijau": 1,
+                "Awan Putih Cula Merah": 2,
+                "Awan Putih Cula Kuning": 3,
+                "Awan Putih Cula Hitam": 4,
+
+                // Dewasa
+                "Awan Putih": 10,
+                "Pelangi Hijau": 11,
+                "Pelangi Merah I": 12,
+                "Pelangi Merah II": 13,
+                "Pelangi Merah III": 14,
+                "Pelangi Kuning I": 15,
+                "Pelangi Kuning II": 16,
+                "Pelangi Kuning III": 17,
+                "Pelangi Kuning IV": 18,
+                "Hitam Kosong": 19,
+                "Hitam Pelangi Cula Sakti I": 20,
+                "Hitam Pelangi Cula Sakti II": 21,
+                "Hitam Pelangi Cula Sakti III": 22,
+                "Hitam Pelangi Cula Sakti IV": 23,
+                "Hitam Pelangi Cula Sakti V": 24,
+                "Hitam Pelangi Cula Sakti VI": 25
+            };
+
+            $('#studentSelect').on('change', function() {
+                // Dapatkan bengkung terkini pelajar yang dipilih
+                let currentBengkung = $(this).find(':selected').data('bengkung');
+                
+                // Cari rank bengkung (kalau budak baru/tiada rekod, rank dia = 0)
+                let currentRank = bengkungHierarchy[currentBengkung] || 0;
+
+                // Tapis dropdown bengkung
+                $('#bengkungSelect option').each(function() {
+                    let optionVal = $(this).val();
+                    
+                    if (optionVal === "") return; // Abaikan option placeholder
+
+                    let optionRank = bengkungHierarchy[optionVal] || 999;
+
+                    // Kalau rank bengkung dalam dropdown tu sama atau lebih rendah, kita disable dan sorok
+                    if (optionRank <= currentRank) {
+                        $(this).prop('disabled', true).hide();
+                    } else {
+                        $(this).prop('disabled', false).show();
+                    }
+                });
+
+                // Sorokkan optgroup (Kanak-Kanak/Dewasa) kalau semua pilihan di dalamnya dah kena disable
+                $('#bengkungSelect optgroup').each(function() {
+                    if ($(this).children('option:not(:disabled)').length === 0) {
+                        $(this).hide();
+                    } else {
+                        $(this).show();
+                    }
+                });
+
+                // Reset balik pilihan supaya tak tersangkut pada option yang dah kena disable
+                $('#bengkungSelect').val('');
+            });
+            // =========================================================
+
 
             // SKRIP KIRA MARKAH AUTOMATIK
             $('.mark-input').on('input', function() {

@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\SessionTimetable; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon; // Wajib import Carbon
 
 class EnrollmentController extends Controller
 {
@@ -38,12 +39,30 @@ class EnrollmentController extends Controller
         $berjaya = 0;
         $gagalPenuh = 0;
         $gagalDuplicate = 0;
+        $gagalClash = 0; // Pembolehubah baru untuk log kelas yang clash
+
+        // KITA EJAS SINI: Tarik siap-siap semua tarikh kelas yang pelajar ni DAH enroll
+        $myEnrolledSessionIds = Enrollment::where('user_ID', $user->user_ID)->pluck('session_ID');
+        $myEnrolledDates = [];
+        
+        if ($myEnrolledSessionIds->isNotEmpty()) {
+            $myEnrolledDates = SessionTimetable::whereIn('id', $myEnrolledSessionIds)
+                ->pluck('start_time')
+                ->map(function($date) {
+                    return Carbon::parse($date)->format('Y-m-d');
+                })->toArray();
+        }
 
         foreach ($session_ids as $sid) {
             $session = SessionTimetable::find($sid);
             if (!$session) continue;
 
-            // Check duplicate enrollment
+            // 1. Semak jika pengguna ini cuba enroll kelas pada tarikh yang dah berlalu (Elak cheat inspect element)
+            if (Carbon::parse($session->start_time)->isPast()) {
+                continue; 
+            }
+
+            // 2. Check duplicate enrollment (Kelas yang SAMA tepat)
             $alreadyEnrolled = Enrollment::where('user_ID', $user->user_ID)
                                          ->where('session_ID', $sid)
                                          ->exists();
@@ -53,7 +72,15 @@ class EnrollmentController extends Controller
                 continue; 
             }
 
-            // Check class capacity
+            // 3. KITA EJAS SINI: Semak pertindihan Tarikh (Clash)
+            // Walaupun kelas berbeza, jika hari yang sama, sistem tolak!
+            $tarikhSesiBaru = Carbon::parse($session->start_time)->format('Y-m-d');
+            if (in_array($tarikhSesiBaru, $myEnrolledDates)) {
+                $gagalClash++;
+                continue;
+            }
+
+            // 4. Check class capacity
             $currentEnrolled = Enrollment::where('session_ID', $sid)->count();
             
             if ($session->capacity && $currentEnrolled >= $session->capacity) {
@@ -70,17 +97,24 @@ class EnrollmentController extends Controller
             ]);
             
             $berjaya++;
+            // Tambah tarikh yang baru berjaya enroll ni ke dalam array supaya tak clash dengan loop seterusnya
+            $myEnrolledDates[] = $tarikhSesiBaru;
         }
 
         if ($berjaya > 0) {
             $mesej = "Congratulations! You have successfully enrolled in $berjaya class session(s).";
             
-            if ($gagalPenuh > 0 || $gagalDuplicate > 0) {
-                $mesej .= " (Skipped " . ($gagalPenuh + $gagalDuplicate) . " session(s) due to being full or already enrolled).";
+            $isuGagal = [];
+            if ($gagalPenuh > 0) $isuGagal[] = "$gagalPenuh full";
+            if ($gagalDuplicate > 0) $isuGagal[] = "$gagalDuplicate duplicated";
+            if ($gagalClash > 0) $isuGagal[] = "$gagalClash clashed with your existing schedule";
+            
+            if (count($isuGagal) > 0) {
+                $mesej .= " (Skipped " . implode(', ', $isuGagal) . ").";
             }
             return redirect()->back()->with('success', $mesej);
         } else {
-            return redirect()->back()->with('error', 'Enrollment failed! All selected sessions were either full or you have already enrolled in them.');
+            return redirect()->back()->with('error', 'Enrollment failed! All selected sessions were either full, already enrolled, or clash with your existing schedule.');
         }
     }
 
@@ -93,13 +127,11 @@ class EnrollmentController extends Controller
                                  ->orderBy('created_at', 'desc')
                                  ->get();
 
-        // KITA EJAS SINI: Buat array events berserta data pop-up modal
         $calendarEvents = [];
         foreach ($enrollments as $enrollment) {
             $sesi = $enrollment->session;
             
             if ($sesi) {
-                // Tentukan adakah kelas dah lepas atau belum
                 $tarikhMula = \Carbon\Carbon::parse($sesi->start_time)->format('Y-m-d');
                 $masaTamat = $sesi->end_time;
                 
@@ -114,15 +146,12 @@ class EnrollmentController extends Controller
                 $calendarEvents[] = [
                     'title' => $enrollment->course->course_type ?? 'Kelas Silat',
                     
-                    // Format ISO8601 TEPAT tanpa '+08:00' supaya browser tak tambah 8 jam
                     'start' => \Carbon\Carbon::parse($sesi->start_time)->format('Y-m-d\TH:i:s'),
                     'end'   => $gabunganTamat->format('Y-m-d\TH:i:s'),
                     
-                    // Warna kelabu kalau dah lepas, warna merah gayong kalau belum
                     'color' => $isPast ? '#888888' : '#cc0000',
                     'className' => $isPast ? 'fc-event-past' : '',
                     
-                    // Maklumat tambahan untuk dipaparkan di dalam Pop-up Modal
                     'extendedProps' => [
                         'courseName'  => $enrollment->course->course_type ?? 'Training Class',
                         'instructor'  => $enrollment->course->instructor->name ?? 'TBA',
@@ -133,7 +162,6 @@ class EnrollmentController extends Controller
             }
         }
 
-        // Hantar $calendarEvents ke fail paparan blade
         return view('user.timetable', compact('enrollments', 'calendarEvents'));
     }
 

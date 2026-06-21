@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pending Gelanggang Approvals - PSSGM Melaka</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -36,7 +39,7 @@
         .header-text p { margin: 5px 0 0 0; color: #666; font-size: 0.9em; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.95em; vertical-align: middle; }
         
         th { background-color: #111; color: #ffcc00; font-weight: bold; text-transform: uppercase; font-size: 0.85em; }
         tr:hover { background-color: #fffdf5; }
@@ -63,6 +66,47 @@
         .footer-nav { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
         .back-link { color: #cc0000; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .back-link:hover { transform: translateX(-5px); color: #111; }
+
+        /* --- CSS DATATABLES TEMA PSSGM --- */
+        .dataTables_wrapper { font-family: inherit !important; font-size: 0.9em; color: #111; margin-top: 10px; }
+        .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_length { margin-bottom: 15px; color: #111 !important; }
+        
+        .dataTables_wrapper label { display: inline-block !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 0.85em; margin: 0 !important; color: #111 !important; }
+        .dataTables_wrapper select, .dataTables_wrapper input { 
+            width: auto !important; display: inline-block !important; 
+            padding: 8px 12px !important; border: 2px solid #ddd !important; 
+            border-radius: 8px !important; margin: 0 5px !important; 
+            font-family: inherit !important; font-size: 1rem !important; transition: 0.3s;
+            color: #111 !important;
+        }
+        .dataTables_wrapper select:focus, .dataTables_wrapper input:focus { border-color: #ffcc00 !important; outline: none; background-color: #fffdf5; }
+        
+        table.dataTable { border-collapse: collapse !important; border-bottom: 1px solid #eee !important; }
+        table.dataTable thead th, table.dataTable thead td { 
+            background-color: #111 !important; 
+            color: #ffcc00 !important; 
+            font-weight: bold !important; 
+            text-transform: uppercase !important; 
+            padding: 12px !important;
+            border-bottom: none !important; 
+        }
+        table.dataTable tbody tr { background-color: #fff !important; transition: 0.2s; }
+        table.dataTable tbody tr:hover { background-color: #f9f9f9 !important; }
+        
+        table.dataTable.no-footer { border-bottom: 1px solid #eee !important; margin-bottom: 15px; }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button { 
+            padding: 5px 12px !important; margin-left: 2px !important; border-radius: 4px !important; 
+            border: 1px solid transparent !important; color: #111 !important; font-family: inherit;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current, 
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { 
+            background: #ffcc00 !important; color: #111 !important; 
+            border: 1px solid #e6b800 !important; font-weight: bold; 
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { 
+            background: #111 !important; color: #ffcc00 !important; border: 1px solid #111 !important; 
+        }
     </style>
 </head>
 <body>
@@ -95,14 +139,14 @@
                 </div>
             @else
                 <div style="overflow-x: auto;">
-                    <table>
+                    <table id="pendingTable" class="dataTable">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Address</th>
                                 <th>Cawangan Name</th>
                                 <th>Instructor Name</th>
-                                <th>Status</th>
+                                <th style="text-align: center;">Status</th>
                                 <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
@@ -115,7 +159,7 @@
                                 <td><b>{{ $gelanggang->cawangan->caw_name ?? 'N/A' }}</b></td>
                                 <td>{{ $gelanggang->instructor->name ?? 'Unknown Instructor' }}</td>
                                 
-                                <td><span class="badge-pending">Pending</span></td>
+                                <td style="text-align: center;"><span class="badge-pending">Pending</span></td>
                                 <td style="display: flex; gap: 8px; justify-content: center;">
                                     
                                     <form action="{{ route('gelanggangs.approve', $gelanggang->gel_ID) }}" method="POST" style="margin: 0;">
@@ -149,5 +193,22 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Aktifkan DataTables
+            $('#pendingTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [5, 10, 25, 50],
+                "language": {
+                    "search": "Quick Search:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "emptyTable": "No pending gelanggang found."
+                },
+                "order": [[0, "asc"]] // Susun ikut nama Gelanggang (Kolum pertama)
+            });
+        });
+    </script>
 </body>
 </html>

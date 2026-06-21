@@ -141,7 +141,7 @@
                 {{-- SUSUNAN UNTUK SYSTEM STAFF BIASA --}}
                 @else
                     <a href="{{ route('staff.dashboard') }}" class="nav-link">
-                        <span class="material-icons">admin_panel_settings</span> Admin Panel
+                        <span class="material-icons">admin_panel_settings</span> Dashboard
                     </a>
                     <a href="{{ route('gelanggangs.index') }}" class="nav-link">
                         <span class="material-icons">storefront</span> Gelanggang
